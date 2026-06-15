@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* ==================== DESIGN TOKENS ==================== */
+  --font-arabic: 'Cairo', sans-serif;
+  --font-latin: 'Plus Jakarta Sans', sans-serif;
+
+  --text-xs: 0.875rem;
+  --text-sm: 1rem;
+  --text-base: 1.25rem;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Colors */
+  --color-primary: #3854cd;
+  --color-primary-hover: #2e42ab;
+  --color-primary-active: #29388b;
+  --color-primary-subtle: #e2eaf9;
+
+  --color-bg: #f8fafc;
+  --color-bg-elevated: #ffffff;
+  --color-text-primary: #020617;
+  --color-text-secondary: #475569;
+  --color-text-disabled: #94a3b8;
+
+  --color-border: #e2e8f0;
+  --color-border-focus: #3854cd;
+
+  --neutral-100: #f1f5f9;
+  --radius-md: 8px;
+  --radius-full: 9999px;
+}
+
+/* RTL + Arabic Font */
+[dir="rtl"],
+[lang="ar"] {
+  font-family: var(--font-arabic);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-latin);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+
+  input, button, textarea {
+    font-family: inherit;
+  }
+
+  /* Safe Text Color Utilities */
+  .text-primary { color: var(--color-text-primary) !important; }
+  .text-secondary { color: var(--color-text-secondary) !important; }
+  .text-muted, .text-disabled { color: var(--color-text-disabled) !important; }
+}
+
+/* Reusable Component Classes */
+@layer components {
+  .input {
+    @apply w-full h-12 px-4 bg-white border border-[var(--color-border)] 
+           rounded-[var(--radius-md)]
+           focus:border-[var(--color-border-focus)] 
+           focus:ring-4 focus:ring-blue-100 
+           outline-none transition-all text-base text-primary;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold 
+           rounded-[var(--radius-md)] transition-all active:scale-[0.985];
+  }
+
+  /* Orange Gradient Sign In Button */
+  .btn-primary {
+    @apply flex items-center justify-center py-4 px-6 w-full
+           bg-gradient-to-r from-[#FF8A00] to-[#FFB800]
+           border-b-2 border-[#CC6D00]
+           shadow-[0_4px_20px_rgba(255,138,0,0.25)]
+           rounded-[12px] font-semibold text-white
+           active:scale-[0.97] transition-all duration-200;
+  }
+
+  .btn-outline {
+    @apply border border-[var(--color-border)] hover:bg-[var(--neutral-100)] h-12 text-primary;
+  }
+}
