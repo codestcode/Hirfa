@@ -103,16 +103,16 @@ export default function EmergencyTrackingPage() {
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 pt-4">
           <Button
-            className="bg-green-500 text-white font-cairo rounded-lg h-11 hover:bg-green-600"
+            className="rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
           >
-            <Phone className="w-4 h-4 ml-2" />
+            <Phone className="w-4 h-4 ms-2" />
             اتصال
           </Button>
           <Button
             variant="outline"
-            className="border-2 border-iron-200 text-iron-600 font-cairo rounded-lg h-11"
+            className="rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] border-none"
           >
-            <MessageCircle className="w-4 h-4 ml-2" />
+            <MessageCircle className="w-4 h-4 ms-2" />
             رسالة
           </Button>
         </div>

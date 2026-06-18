@@ -42,7 +42,7 @@ export default function HomePage() {
         <div className="h-[80px] max-w-[512px] w-full flex items-center justify-between px-5 mx-auto">
           <button className="relative flex items-center justify-center rounded-full w-10 h-10 bg-bg-input">
             <Bell size={18} className="text-white" />
-            <div className="absolute rounded-full w-[10px] h-[10px]" style={{ right: '8px', top: '8px', background: 'var(--color-primary)', boxShadow: '0 0 0 2px #020617' }} />
+            <div className="absolute rounded-full w-[10px] h-[10px]" style={{ left: '8px', top: '8px', background: 'var(--color-primary)', boxShadow: '0 0 0 2px #020617' }} />
           </button>
 
           <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ export default function HomePage() {
               >
                 <div
                   className="rounded-full bg-white transition-all duration-300 w-[28px] h-[28px] absolute top-1"
-                  style={{ right: isAvailable ? '32px' : '4px' }}
+                  style={{ left: isAvailable ? '32px' : '4px' }}
                 />
               </div>
             </div>
@@ -154,8 +154,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col items-start self-stretch rounded-[28px] p-5 gap-5 backdrop-blur-[6px] border border-primary/20" style={{ background: 'linear-gradient(124deg, rgba(255, 138, 0, 0.10) 0%, rgba(15, 23, 42, 0.80) 100%)' }}>
-            <div className="flex justify-between items-start self-stretch">
+          <div className="flex flex-col items-start self-stretch cardgrad ">
+            <div className="flex justify-between items-start self-stretch ">
               <div className="rounded-[8px] px-2 py-1 border border-[var(--color-border-light)] bg-bg-input">
                 <span className="text-[10px] font-medium leading-[15px] text-[#94A3B8]">
                   منذ 10 دقائق
@@ -189,7 +189,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex items-center self-stretch rounded-[20px] py-3 bg-black/20" style={{ paddingLeft: '30.5px', paddingRight: '30.52px', gap: '61px' }}>
+            <div className="flex items-center self-stretch rounded-[20px] py-3 bg-black/20" style={{ paddingRight: '30.5px', paddingLeft: '30.52px', gap: '61px' }}>
               <div className="flex items-center gap-2">
                 <span className="text-[12px] font-medium leading-4 text-white">450 ج.م</span>
                 <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -205,11 +205,11 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex justify-center items-start self-stretch gap-3">
-              <button className="flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] cursor-pointer border-none">
-                رفض
+            <div className="flex justify-center items-start self-stretch gap-4">
+                  <button className="box-border px-[24px] py-[14px] bg-white/5 border border-white/10 rounded-[20px]">
+                    رفض
               </button>
-              <button className="rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 w-[196px] bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none">
+              <button  className="btn-primary ">
                 قبول الطلب
               </button>
             </div>
@@ -249,11 +249,11 @@ export default function HomePage() {
 
             <div className="relative">
               {/* Timeline vertical line */}
-              <div className="absolute right-[10px] top-0 w-[2px] h-full opacity-20 bg-[var(--gradient-primary)]" />
+              <div className="absolute end-[10px] top-0 w-[2px] h-full opacity-20 bg-[var(--gradient-primary)]" />
 
               {/* Timeline item - Client & Task */}
-              <div className="relative pr-[50px] pb-5">
-                <div className="absolute right-[1px] top-0 flex items-center justify-center rounded-full w-5 h-5 border border-primary/30 bg-primary/20">
+              <div className="relative pe-[50px] pb-5">
+                <div className="absolute end-[1px] top-0 flex items-center justify-center rounded-full w-5 h-5 border border-primary/30 bg-primary/20">
                   <div className="rounded-full w-2 h-2 bg-primary" />
                 </div>
                 <div className="flex flex-col items-end pt-[2px]">
@@ -267,8 +267,8 @@ export default function HomePage() {
               </div>
 
               {/* Timeline item - Address */}
-              <div className="relative pr-[50px] pb-5">
-                <div className="absolute right-[1px] top-0 flex items-center justify-center rounded-full w-5 h-5 border border-white/20 bg-white/10">
+              <div className="relative pe-[50px] pb-5">
+                <div className="absolute end-[1px] top-0 flex items-center justify-center rounded-full w-5 h-5 border border-white/20 bg-white/10">
                   <div className="rounded-full w-2 h-2 bg-white/40" />
                 </div>
                 <div className="flex flex-col items-end pt-[2px]">
@@ -305,7 +305,7 @@ export default function HomePage() {
               </div>
               <span className="text-[14px] font-bold leading-5 text-white">{label}</span>
               {badge && (
-                <div className="absolute flex items-center justify-center rounded-full w-5 h-5 border-2 border-[#020617] bg-primary" style={{ left: '17px', top: '17px' }}>
+                <div className="absolute flex items-center justify-center rounded-full w-5 h-5 border-2 border-[#020617] bg-primary" style={{ right: '17px', top: '17px' }}>
                   <span className="text-[10px] font-bold leading-[15px] text-white text-center">
                     {badge}
                   </span>

@@ -115,7 +115,7 @@ export default function OTPPage() {
         <button
           onClick={handleVerify}
           disabled={isLoading || otp.replace(/\s/g, '').length !== 6}
-          className="btn btn-primary w-full max-w-[360px] h-12 text-[var(--text-sm)] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full max-w-[360px] rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
         >
           {isLoading ? 'جاري التحقق...' : 'تحقق'}
         </button>

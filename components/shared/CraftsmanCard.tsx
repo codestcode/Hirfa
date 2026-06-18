@@ -36,7 +36,7 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
               className="object-cover"
             />
             {craftsman.verified && (
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-2 end-2">
                 <CheckCircle className="w-5 h-5 text-green-500 bg-white rounded-full" />
               </div>
             )}
@@ -127,7 +127,7 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
               <MapPin className="w-3 h-3" />
               <span>{craftsman.distance} كم</span>
               {craftsman.isAvailable && (
-                <span className="w-2 h-2 bg-green-500 rounded-full ml-1"></span>
+                <span className="w-2 h-2 bg-green-500 rounded-full ms-1"></span>
               )}
             </div>
           </div>

@@ -48,7 +48,7 @@ export default function EmergencyPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-4 mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex gap-3"
+        className="mx-4 mt-4 p-4 bg-red-50 border-s-4 border-red-500 rounded-lg flex gap-3"
       >
         <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
         <div>
@@ -109,7 +109,7 @@ export default function EmergencyPage() {
         <Button
           onClick={handleRequest}
           disabled={!selected || isRequesting}
-          className="w-full h-12 bg-red-500 text-white font-cairo font-bold rounded-lg hover:bg-red-600 disabled:opacity-50"
+          className="w-full rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] disabled:opacity-50 disabled:cursor-not-allowed border-none"
         >
           {isRequesting ? 'جاري البحث...' : 'اطلب الآن'}
         </Button>
