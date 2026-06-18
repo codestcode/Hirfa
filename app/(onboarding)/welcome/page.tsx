@@ -58,7 +58,7 @@ export default function WelcomePage() {
           <Button
             onClick={handleGetStarted}
             disabled={isLoading}
-            className="w-full h-12 bg-iron-600 text-white font-cairo font-semibold text-base rounded-lg hover:bg-iron-700"
+            className="w-full rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
           >
             {isLoading ? 'جاري...' : 'ابدأ الآن'}
           </Button>

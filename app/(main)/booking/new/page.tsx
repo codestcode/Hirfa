@@ -213,14 +213,14 @@ function BookingContent() {
           <Button
             onClick={() => setStep(step - 1)}
             variant="outline"
-            className="flex-1 h-12 font-cairo"
+            className="flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] border-none"
           >
             رجوع
           </Button>
         )}
         <Button
           onClick={step === 4 ? handleConfirm : handleNext}
-          className="flex-1 bg-primary text-primary-foreground h-12 font-cairo font-semibold"
+          className="flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
         >
           {step === 4 ? 'تأكيد الحجز' : 'التالي'}
         </Button>
