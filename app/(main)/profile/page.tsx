@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
   LogOut, Bell, Wallet, Settings, Image as ImageIcon, Star,
-  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { mockUser } from '@/lib/mock-data'
 
@@ -56,7 +56,7 @@ export default function ProfilePage() {
             className="relative flex items-center justify-center rounded-full w-10 h-10"
             style={{ background: 'rgba(255, 255, 255, 0.05)' }}
           >
-            <ChevronLeft size={20} className="text-white" />
+            <ChevronRight size={20} className="text-white" />
             <div className="absolute start-2 top-2 w-[10px] h-[10px] rounded-full bg-[#ff8a00]" />
           </button>
 
