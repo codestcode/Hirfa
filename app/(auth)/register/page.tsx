@@ -113,7 +113,7 @@ export default function RegisterPage() {
                             رقم الهاتف
                         </label>
                         <div className="flex items-center w-full rounded-input h-[52px] px-lg border border-white/8 bg-white/4">
-                            <div className="flex items-center shrink-0 gap-[6px] pl-3 border-l border-white/8">
+                            <div className="flex items-center shrink-0 gap-[6px] pe-3 border-s border-white/8">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <rect x="2" y="3" width="20" height="14" rx="2" stroke="#94A3B8" strokeWidth="1.5" />
                                     <path d="M2 7h20" stroke="#94A3B8" strokeWidth="1.5" />
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                     <div className="flex flex-col w-full gap-sm">
                         <label className="text-[13px] font-semibold leading-5 text-text-white">
                             البريد الإلكتروني
-                            <span className="text-[11px] font-normal mr-1 text-slate-400">(اختياري)</span>
+                            <span className="text-[11px] font-normal me-1 text-slate-400">(اختياري)</span>
                         </label>
                         <div className="flex items-center w-full rounded-input h-[52px] px-lg border border-white/8 bg-white/4">
                             <input
@@ -166,7 +166,7 @@ export default function RegisterPage() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-transparent text-text-white text-[14px] font-normal outline-none pr-3"
+                                className="w-full bg-transparent text-text-white text-[14px] font-normal outline-none pe-3"
                             />
                         </div>
                     </div>
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                                 placeholder="••••••••"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full bg-transparent text-text-white text-[14px] font-normal outline-none pr-3"
+                                className="w-full bg-transparent text-text-white text-[14px] font-normal outline-none pe-3"
                             />
                         </div>
                     </div>
@@ -213,7 +213,7 @@ export default function RegisterPage() {
 
                 {/* Google Sign In */}
                 <button
-                    className="w-full rounded-input flex items-center justify-center mt-xl py-[14px] gap-md border border-white/8 bg-white/4 cursor-pointer"
+                    className="w-full rounded-[12px] flex items-center justify-center mt-xl px-6 py-4 h-14 gap-md bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] cursor-pointer border-none text-white text-[16px] font-normal leading-6"
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -221,7 +221,7 @@ export default function RegisterPage() {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    <span className="text-[14px] font-semibold text-text-white">المتابعة مع Google</span>
+                    <span>المتابعة مع Google</span>
                 </button>
 
                 {/* Footer */}

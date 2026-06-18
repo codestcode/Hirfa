@@ -57,7 +57,7 @@ export default function ProfilePage() {
             style={{ background: 'rgba(255, 255, 255, 0.05)' }}
           >
             <ChevronLeft size={20} className="text-white" />
-            <div className="absolute right-2 top-2 w-[10px] h-[10px] rounded-full bg-[#ff8a00]" />
+            <div className="absolute start-2 top-2 w-[10px] h-[10px] rounded-full bg-[#ff8a00]" />
           </button>
 
           <span className="font-bold text-lg text-white">

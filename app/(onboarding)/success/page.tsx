@@ -136,15 +136,7 @@ export default function SuccessPage() {
         <button
           onClick={handleContinue}
           disabled={isLoading}
-          className="btn btn-primary"
-          style={{
-            width: '100%',
-            height: 52,
-            fontSize: 'var(--text-sm)',
-            borderRadius: 'var(--radius-md)',
-            opacity: isLoading ? 0.7 : 1,
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-          }}
+          className="w-full rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
         >
           {isLoading ? 'جاري...' : 'ابدأ الاستخدام'}
         </button>

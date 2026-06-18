@@ -59,14 +59,14 @@ export default function BookingSuccessPage() {
         <div className="space-y-3 pt-4">
           <Button
             onClick={() => router.push('/home')}
-            className="w-full h-12 bg-primary text-primary-foreground font-cairo font-semibold rounded-lg"
+            className="w-full rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
           >
             العودة للرئيسية
           </Button>
           <Button
             onClick={() => router.push('/bookings')}
             variant="outline"
-            className="w-full h-12 border-2 border-iron-200 text-iron-600 font-cairo font-semibold rounded-lg"
+            className="w-full rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] border-none"
           >
             عرض حجوزاتي
           </Button>

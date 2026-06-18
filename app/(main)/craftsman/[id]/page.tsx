@@ -124,13 +124,13 @@ export default function CraftsmanPage({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={() => router.push(`/booking/new?craftsman=${craftsman.id}`)}
-            className="bg-primary text-primary-foreground font-cairo font-semibold rounded-lg h-11"
+            className="rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
           >
             احجز الآن
           </Button>
           <Button
             variant="outline"
-            className="border-2 border-iron-200 text-iron-600 font-cairo font-semibold rounded-lg h-11"
+            className="rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] border-none"
           >
             تواصل
           </Button>
@@ -309,16 +309,16 @@ export default function CraftsmanPage({ params }: { params: { id: string } }) {
         <Button
           variant="outline"
           size="lg"
-          className="flex-1 font-cairo"
+          className="flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] border-none"
         >
-          <MessageCircle className="w-4 h-4 ml-2" />
+          <MessageCircle className="w-4 h-4 ms-2" />
           رسالة
         </Button>
         <Button
           size="lg"
-          className="flex-1 bg-primary text-primary-foreground font-cairo"
+          className="flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] border-none"
         >
-          <PhoneCall className="w-4 h-4 ml-2" />
+          <PhoneCall className="w-4 h-4 ms-2" />
           اتصال
         </Button>
       </div>

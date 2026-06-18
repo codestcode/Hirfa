@@ -118,7 +118,7 @@
   --opacity-placeholder: 0.5;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(90deg, #FF8A00 0%, #FFB800 100%);
+  --gradient-primary: linear-gradient(135deg, #FF8A00 0%, #FFB800 100%);
   --gradient-primary-horizontal: linear-gradient(90deg, #ff8a00 0%, #ffb800 100%);
   --gradient-dark: linear-gradient(90deg, rgb(0, 4, 25) 0%, rgb(0, 4, 25) 100%);
 
@@ -254,7 +254,7 @@
   --opacity-placeholder: 0.5;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #ff8a00 0%, #ffb800 100%);
+  --gradient-primary: linear-gradient(135deg, #FF8A00 0%, #FFB800 100%);
   --gradient-primary-horizontal: linear-gradient(90deg, #ff8a00 0%, #ffb800 100%);
   --gradient-dark: linear-gradient(90deg, rgb(0, 4, 25) 0%, rgb(0, 4, 25) 100%);
 
@@ -284,11 +284,21 @@
     font-family: var(--font-latin);
     background-color: var(--color-bg-dark);
     color: var(--color-text-primary);
+    text-align: start;
   }
 
-  input, button, textarea {
+  input,
+  button,
+  textarea {
     font-family: inherit;
   }
+}
+
+/* Ensure RTL propagation */
+html[dir="rtl"] body,
+body[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
 }
 
 /* Reusable Component Classes */
@@ -315,7 +325,7 @@
     @apply inline-flex items-center justify-center gap-2 font-semibold transition-all;
     border-radius: var(--radius-button);
 
-    
+
   }
 
   .btn:active {
@@ -339,7 +349,7 @@
 
   .btn-primary:hover {
     box-shadow: var(--shadow-primary-hover);
-    background: linear-gradient(135deg, var(--color-primary-hover) 0%, #ffc933 100%);
+    background: linear-gradient(135deg, var(--color-primary-hover) 0%, #d3a527 100%);
   }
 
   .btn-primary:active {
@@ -358,6 +368,17 @@
   .btn-outline:hover {
     background: var(--color-bg-input);
     border-color: var(--color-primary);
+  }
+
+  .btn-secondy {
+    padding: 14px 14px;
+
+
+
+
+    background: linear-gradient(90deg, rgba(196, 198, 207, 0.473) 0%, #727986 100%);
+    border-radius: 12px;
+
   }
 
   /* Card Component */
@@ -414,5 +435,21 @@
   .divider {
     height: 1px;
     background: var(--color-border-divider);
+
+
+  }
+
+
+  .cardgrad {
+    background: linear-gradient(
+      120deg,
+      #ff880083 0%,
+      #0F172A 100%
+    );
+    backdrop-filter: blur(8px);
+    border-radius: 28px;
+
+    padding: 20px 24px;
+    gap: 20px;
   }
 }
