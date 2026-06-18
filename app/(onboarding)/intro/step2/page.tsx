@@ -52,7 +52,7 @@ export default function OnboardingStep2() {
             <span className="font-cairo text-[32px] font-extrabold leading-6 bg-gradient-to-r from-[#FF8A00] to-[#FFB800] bg-clip-text text-transparent">
               بسهولة
             </span>
-            <span className="font-cairo text-[32px] font-extrabold leading-6 text-[#000419] mr-2">
+            <span className="font-cairo text-[32px] font-extrabold leading-6 text-[#000419] ml-2">
               احجز وتواصل
             </span>
           </h2>
@@ -64,15 +64,6 @@ export default function OnboardingStep2() {
 
         <div className="flex items-center gap-[18px]">
           <button
-            onClick={() => router.push('/intro/step1')}
-            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
-            style={{
-              background: 'linear-gradient(90deg, rgba(196,198,207,0.30) 0%, #44474E 100%)',
-            }}
-          >
-            السابق
-          </button>
-          <button
             onClick={() => router.push('/intro/step3')}
             className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
             style={{
@@ -81,6 +72,15 @@ export default function OnboardingStep2() {
             }}
           >
             التالي
+          </button>
+          <button
+            onClick={() => router.push('/intro/step1')}
+            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
+            style={{
+              background: 'linear-gradient(90deg, rgba(196,198,207,0.30) 0%, #44474E 100%)',
+            }}
+          >
+            السابق
           </button>
         </div>
       </section>

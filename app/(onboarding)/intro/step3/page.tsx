@@ -58,15 +58,6 @@ export default function OnboardingStep3() {
 
         <div className="flex items-center gap-[18px]">
           <button
-            onClick={() => router.push('/intro/step2')}
-            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
-            style={{
-              background: 'linear-gradient(90deg, rgba(196,198,207,0.30) 0%, #44474E 100%)',
-            }}
-          >
-            السابق
-          </button>
-          <button
             onClick={() => router.push('/login')}
             className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
             style={{
@@ -75,6 +66,15 @@ export default function OnboardingStep3() {
             }}
           >
             التالي
+          </button>
+          <button
+            onClick={() => router.push('/intro/step2')}
+            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
+            style={{
+              background: 'linear-gradient(90deg, rgba(196,198,207,0.30) 0%, #44474E 100%)',
+            }}
+          >
+            السابق
           </button>
         </div>
       </section>
