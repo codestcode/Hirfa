@@ -6,9 +6,20 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import ToolSilhouettes from '@/components/shared/ToolSilhouettes'
 
+const LOADING_STAGES = [
+  { from: 0,  label: 'OPTIMIZING RESOURCES' },
+  { from: 40, label: 'LOADING ASSETS'       },
+  { from: 70, label: 'ALMOST READY'         },
+  { from: 90, label: 'LAUNCHING'            },
+]
+
 export default function SplashPage() {
   const router = useRouter()
   const [progress, setProgress] = useState(0)
+
+  const statusLabel =
+    [...LOADING_STAGES].reverse().find((s) => progress >= s.from)?.label ??
+    'OPTIMIZING RESOURCES'
 
   useEffect(() => {
     const duration = 2000
@@ -75,7 +86,7 @@ export default function SplashPage() {
         </div>
         <div className="flex justify-between mt-2">
           <span className="text-[12px] font-medium leading-4 tracking-[-0.6px] uppercase text-[#C5C6D0]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            OPTIMIZING RESOURCES
+            {statusLabel}
           </span>
           <span className="text-[12px] font-medium leading-4 tracking-[-0.6px] uppercase text-[#C5C6D0]" style={{ fontFamily: 'Inter, sans-serif' }}>
             {Math.round(progress)}%
