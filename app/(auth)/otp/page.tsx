@@ -1,12 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { ArrowLeft, Smartphone } from 'lucide-react'
 import { OTPInput } from '@/components/shared/OTPInput'
 
-export default function OTPPage() {
+function OTPPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const phoneParam = searchParams.get('phone')
+  const formattedPhone = phoneParam ? `+20 ${phoneParam.slice(0, 3)} *** ${phoneParam.slice(-4)}` : '010 **** 234'
+
   const [otp, setOtp] = useState('')
   const [timeLeft, setTimeLeft] = useState(60)
   const [canResend, setCanResend] = useState(false)
@@ -24,7 +30,17 @@ export default function OTPPage() {
   const handleVerify = () => {
     if (otp.length !== 6) return
     setIsLoading(true)
-    setTimeout(() => router.push('/success'), 800)
+
+    const flow = searchParams.get('flow')
+    const roleParam = searchParams.get('role') || localStorage.getItem('role') || 'client'
+
+    setTimeout(() => {
+      if (flow === 'reset') {
+        router.push('/reset-password')
+      } else {
+        router.push(`/home?role=${roleParam}`)
+      }
+    }, 800)
   }
 
   const handleResend = () => {
@@ -33,107 +49,89 @@ export default function OTPPage() {
     setOtp('')
   }
 
-  const formatTime = (s: number) => 
+  const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-[var(--color-bg)] flex flex-col font-[var(--font-arabic)] p-4"
+      className="min-h-screen bg-[#050814] flex flex-col items-center justify-center p-4 font-[family-name:var(--font-arabic)]"
     >
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between py-4">
+      <div className="w-full max-w-[400px] flex flex-col flex-1 justify-center relative">
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--neutral-100)] transition-colors"
+          className="absolute top-4 right-0 w-10 h-10 flex items-center justify-center rounded-full text-[#6B7A99] hover:bg-slate-900 transition-colors"
         >
           <ArrowLeft size={20} className="scale-x-[-1]" />
         </button>
 
-        <span className="text-[var(--text-sm)] font-[var(--weight-semibold)] text-[var(--color-text-primary)]">
-          تفعيل الحساب
-        </span>
-
-        <div className="w-10" />
-      </div>
-
-      {/* ── Main ── */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
-        
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-full bg-[var(--color-primary-subtle)] flex items-center justify-center">
-          <Smartphone size={36} className="text-[var(--color-primary)]" />
+        <div className="flex justify-center mb-8">
+          <Image
+            src="/hirfa_logo.svg"
+            alt="Logo"
+            width={84}
+            height={84}
+            priority
+          />
         </div>
 
-        {/* Title + Subtitle */}
-        <div className="text-center">
-          <h2 className="text-[1.75rem] font-[var(--weight-bold)] text-[var(--color-text-primary)] mb-2">
-            أدخل رمز التحقق
+        <div className="text-center mb-8">
+          <h2 className="text-[1.75rem] font-bold text-white mb-2">
+            تأكيد الرمز
           </h2>
-          <p 
-            className="text-[var(--text-xs)] leading-relaxed" 
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
-            أرسلنا رمزاً مكوناً من 6 أرقام إلى{' '}
-            <span className="text-[var(--color-text-primary)] font-[var(--weight-semibold)]">
-              010 **** 234
+          <p className="text-sm text-[#6B7A99] leading-relaxed">
+            أدخل رمز التحقق المكون من 6 أرقام المرسل إلى{' '}
+            <span className="text-[#F0F4FF] font-semibold" dir="ltr">
+              {formattedPhone}
             </span>
           </p>
         </div>
 
-        {/* OTP Input */}
-        <OTPInput
-          value={otp}
-          onChange={setOtp}
-          onComplete={handleVerify}
-          length={6}
-        />
+        <div className="flex justify-center mb-8 bg-transparent">
+          <OTPInput
+            value={otp}
+            onChange={setOtp}
+            onComplete={handleVerify}
+            length={6}
+          />
+        </div>
 
-        {/* Timer / Resend */}
-        <div className="text-center">
+        <div className="text-center mb-8">
           {!canResend ? (
-            <p 
-              className="text-[var(--text-xs)]" 
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
+            <p className="text-sm text-[#6B7A99]">
               إعادة الإرسال خلال{' '}
-              <span className="text-[var(--color-primary)] font-[var(--weight-semibold)]">
+              <span className="text-[#FF8A00] font-semibold">
                 {formatTime(timeLeft)}
               </span>
             </p>
           ) : (
             <button
               onClick={handleResend}
-              className="text-[var(--color-primary)] font-[var(--weight-semibold)] text-[var(--text-xs)] hover:underline bg-transparent border-none p-0 cursor-pointer"
+              className="text-[#FF8A00] font-semibold text-sm hover:underline bg-transparent border-none p-0 cursor-pointer"
             >
               إعادة الإرسال الآن
             </button>
           )}
         </div>
 
-        {/* Verify Button */}
         <button
           onClick={handleVerify}
           disabled={isLoading || otp.replace(/\s/g, '').length !== 6}
-          className="w-full max-w-[360px] rounded-[12px] text-center text-[16px] font-normal leading-6 text-white px-6 py-4 h-14 bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
+          className="w-full h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'جاري التحقق...' : 'تحقق'}
+          {isLoading ? 'جاري التحقق...' : 'تأكيد الرمز'}
         </button>
-
-        {/* Wrong Number */}
-        <p 
-          className="text-[var(--text-xs)] text-center" 
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          رقم خاطئ؟{' '}
-          <button
-            onClick={() => router.back()}
-            className="text-[var(--color-primary)] font-[var(--weight-semibold)] bg-transparent border-none p-0 cursor-pointer hover:underline"
-          >
-            تعديل الرقم
-          </button>
-        </p>
       </div>
     </div>
+  )
+}
+
+export default function OTPPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050814] flex items-center justify-center" />
+    }>
+      <OTPPageContent />
+    </Suspense>
   )
 }
