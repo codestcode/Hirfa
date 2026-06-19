@@ -22,7 +22,7 @@ export default function OnboardingStep3() {
           />
           <button
             onClick={() => router.push('/login')}
-            className="text-[#C5C6D0] text-center font-cairo text-base font-semibold leading-10 tracking-[-0.64px]"
+            className="text-[#C5C6D0] text-center font-[family-name:var(--font-arabic)] text-base font-semibold leading-10 tracking-[-0.64px]"
           >
             تخطي
           </button>
@@ -48,18 +48,18 @@ export default function OnboardingStep3() {
         </div>
 
         <div className="flex flex-col items-center gap-[22px] max-w-[320px] mx-auto pb-8">
-          <h2 className="text-[#000419] text-center font-cairo text-[32px] font-bold leading-10 tracking-[-0.64px]">
+          <h2 className="text-[#000419] text-center font-[family-name:var(--font-arabic)] text-[32px] font-bold leading-10 tracking-[-0.64px]">
             خدمات موثوقة وتقييمات حقيقية
           </h2>
-          <p className="text-[#52627A] text-center font-cairo text-lg font-normal leading-7">
+          <p className="text-[#52627A] text-center font-[family-name:var(--font-arabic)] text-lg font-normal leading-7">
             اطلع على التقييمات وآراء العملاء قبل اختيار الحرفي المناسب لك.
           </p>
         </div>
 
         <div className="flex items-center gap-[18px]">
           <button
-            onClick={() => router.push('/login')}
-            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
+            onClick={() => router.push('/role')}
+            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-[family-name:var(--font-arabic)] text-base font-normal leading-6"
             style={{
               background: 'linear-gradient(90deg, #FF8A00 0%, #FFB800 100%)',
               boxShadow: '0 10px 15px -3px rgba(255,138,0,0.20), 0 4px 6px -4px rgba(255,138,0,0.20)',
@@ -69,7 +69,7 @@ export default function OnboardingStep3() {
           </button>
           <button
             onClick={() => router.push('/intro/step2')}
-            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
+            className="flex-1 h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-[family-name:var(--font-arabic)] text-base font-normal leading-6"
             style={{
               background: 'linear-gradient(90deg, rgba(196,198,207,0.30) 0%, #44474E 100%)',
             }}

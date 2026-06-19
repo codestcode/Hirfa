@@ -22,7 +22,7 @@ export default function OnboardingStep1() {
           />
           <button
             onClick={() => router.push('/login')}
-            className="text-[#C5C6D0] text-center font-cairo text-base font-semibold leading-10 tracking-[-0.64px]"
+            className="text-[#C5C6D0] text-center font-[family-name:var(--font-arabic)] text-base font-semibold leading-10 tracking-[-0.64px]"
           >
             تخطي
           </button>
@@ -48,10 +48,10 @@ export default function OnboardingStep1() {
         </div>
 
         <div className="flex flex-col items-center gap-4">
-          <h2 className="text-[#0B1C30] text-center font-cairo text-[32px] font-bold leading-10 tracking-[-0.64px]">
+          <h2 className="text-[#0B1C30] text-center font-[family-name:var(--font-arabic)] text-[32px] font-bold leading-10 tracking-[-0.64px]">
             كل الحرفيين اللي تحتاجهم في مكان واحد
           </h2>
-          <p className="text-[#52627A] text-center font-cairo text-base font-normal leading-6 max-w-[280px]">
+          <p className="text-[#52627A] text-center font-[family-name:var(--font-arabic)] text-base font-normal leading-6 max-w-[280px]">
             اعثر على نجارين، سباكين، كهربائيين، نقاشين
             وغيرهم بسهولة وفي دقائق.
           </p>
@@ -59,7 +59,7 @@ export default function OnboardingStep1() {
 
         <button
           onClick={() => router.push('/intro/step2')}
-          className="mt-[25px] w-full h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-cairo text-base font-normal leading-6"
+          className="mt-[25px] w-full h-14 flex items-center justify-center gap-3 rounded-[12px] px-6 py-4 text-white font-[family-name:var(--font-arabic)] text-base font-normal leading-6"
           style={{
             background: 'linear-gradient(90deg, #FF8A00 0%, #FFB800 100%)',
             boxShadow: '0 10px 15px -3px rgba(255,138,0,0.20), 0 4px 6px -4px rgba(255,138,0,0.20)',
