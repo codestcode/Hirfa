@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff, User, Mail, Lock, MapPin } from 'lucide-react'
 import { AuthInput } from '@/components/shared/AuthInput'
+import { signUp } from '@/services/auth'
 
 const locationData: Record<string, string[]> = {
   'القاهرة': ['مدينة نصر', 'مصر الجديدة', 'المعادي', 'التجمع الخامس', 'شبرا'],
@@ -41,22 +42,54 @@ function RegisterPageContent() {
     password.length >= 8 &&
     password === confirmPassword
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!isFormValid) return
     setIsLoading(true)
     setError('')
 
-    localStorage.setItem('pendingEmail', email)
-    localStorage.setItem('pendingPassword', password)
-    localStorage.setItem('pendingName', name)
-    localStorage.setItem('pendingRole', role)
-    if (phone) localStorage.setItem('pendingPhone', phone)
-    if (governorate) localStorage.setItem('pendingGovernorate', governorate)
-    if (area) localStorage.setItem('pendingArea', area)
-
     if (isClient) {
-      router.push(`/otp?email=${encodeURIComponent(email)}&role=client&flow=register`)
+      try {
+        const result = await signUp({
+          email,
+          password,
+          fullName: name,
+          phone: phone || undefined,
+          role: 'client',
+          governorate: governorate || undefined,
+          area: area || undefined,
+        })
+
+        localStorage.removeItem('pendingEmail')
+        localStorage.removeItem('pendingPassword')
+        localStorage.removeItem('pendingName')
+        localStorage.removeItem('pendingPhone')
+        localStorage.removeItem('pendingRole')
+        localStorage.removeItem('pendingGovernorate')
+        localStorage.removeItem('pendingArea')
+
+        if (result.session) {
+          router.push('/home')
+        } else {
+          router.push('/check-email')
+        }
+      } catch (err: any) {
+        const msg = err?.message?.toLowerCase?.() || ''
+        if (msg.includes('already') || msg.includes('exists')) {
+          setError('هذا البريد مسجل بالفعل')
+        } else {
+          setError(err?.message || 'فشل إنشاء الحساب')
+        }
+        setIsLoading(false)
+      }
     } else {
+      localStorage.setItem('pendingEmail', email)
+      localStorage.setItem('pendingPassword', password)
+      localStorage.setItem('pendingName', name)
+      localStorage.setItem('pendingRole', role)
+      if (phone) localStorage.setItem('pendingPhone', phone)
+      if (governorate) localStorage.setItem('pendingGovernorate', governorate)
+      if (area) localStorage.setItem('pendingArea', area)
+
       router.push(`/register/details?email=${encodeURIComponent(email)}`)
     }
   }

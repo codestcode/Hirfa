@@ -12,6 +12,7 @@ const publicPaths = [
   '/forgot-password',
   '/reset-password',
   '/otp',
+  '/check-email',
   '/Verification',
   '/Proffession',
 ]
