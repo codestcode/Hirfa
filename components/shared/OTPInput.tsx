@@ -56,7 +56,7 @@ export function OTPInput({ value, onChange, onComplete, length = 6 }: OTPInputPr
   return (
     <div
       dir="ltr"
-      className="flex gap-3 justify-center"
+      className={`flex ${length > 6 ? 'gap-1.5' : 'gap-3'} justify-center`}
       onPaste={handlePaste}
     >
       {values.map((v, i) => (
@@ -72,7 +72,7 @@ export function OTPInput({ value, onChange, onComplete, length = 6 }: OTPInputPr
           onFocus={e => {
             e.target.select()
           }}
-          className={`w-[52px] h-[60px] text-center text-2xl font-[var(--weight-bold)] 
+          className={`${length > 6 ? 'w-[36px] h-[50px] text-xl' : 'w-[52px] h-[60px] text-2xl'} text-center font-[var(--weight-bold)] 
                      text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)]
                      border-2 rounded-[var(--radius-md)] outline-none transition-all
                      caret-[var(--color-primary)] font-[var(--font-arabic)]
