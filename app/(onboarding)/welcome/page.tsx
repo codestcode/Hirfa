@@ -1,7 +1,11 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+
 export default function WelcomePage() {
-<<<<<<< Updated upstream
-  return null
-=======
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -17,7 +21,6 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Hero Image Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -29,11 +32,9 @@ export default function WelcomePage() {
           alt="Egyptian urban neighborhood"
           className="h-full w-full object-cover"
         />
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
       </motion.div>
 
-      {/* Content Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -49,7 +50,6 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        {/* CTA Buttons */}
         <div className="w-full space-y-3 max-w-xs">
           <Button
             onClick={handleGetStarted}
@@ -75,5 +75,4 @@ export default function WelcomePage() {
       </motion.div>
     </div>
   )
->>>>>>> Stashed changes
 }

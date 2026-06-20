@@ -4,6 +4,39 @@ export type PaymentMethod = 'fawry' | 'instapay' | 'card' | 'cash'
 export type EmergencyType = 'water-leak' | 'power-cut' | 'door-break' | 'fire' | 'gas' | 'other'
 export type JobStatus = 'confirmed' | 'en-route' | 'arrived' | 'in-progress' | 'completed'
 
+export type UserRole = 'client' | 'worker'
+
+export interface Profile {
+  id: string
+  role: UserRole
+  full_name: string | null
+  email: string | null
+  phone: string | null
+  avatar_url: string | null
+  governorate: string | null
+  area: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SignUpData {
+  email: string
+  password: string
+  fullName: string
+  phone?: string
+  role: UserRole
+  governorate?: string
+  area?: string
+}
+
+export interface UpdateProfileData {
+  full_name?: string
+  phone?: string
+  avatar_url?: string
+  governorate?: string
+  area?: string
+}
+
 export interface Craftsman {
   id: string
   name: string
@@ -14,7 +47,7 @@ export interface Craftsman {
   coverPhoto: string
   rating: number
   reviewCount: number
-  distance: number // km
+  distance: number
   isAvailable: boolean
   tier: CraftsmanTier
   verified: boolean
@@ -50,7 +83,7 @@ export interface Booking {
 
 export interface Category {
   id: string
-  icon: string // lucide icon name
+  icon: string
   labelAr: string
   labelEn: string
   count: number
@@ -138,7 +171,7 @@ export interface Job {
     timestamp: string
   }[]
   craftsman: Craftsman
-  estimatedDuration: number // minutes
+  estimatedDuration: number
   actualDuration?: number
   location: {
     latitude: number

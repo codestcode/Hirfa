@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Cairo, Plus_Jakarta_Sans } from 'next/font/google'
+import { QueryProvider } from '@/components/QueryProvider'
+import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -51,13 +53,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html 
-      lang="ar" 
+    <html
+      lang="ar"
       dir="rtl"
       className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} ${plusJakarta.variable}`}
     >
       <body className="font-sans antialiased" style={{ backgroundColor: "rgb(0, 4, 25)", color: "rgba(179, 197, 255, 0.8)" }}>
-        {children}
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </QueryProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

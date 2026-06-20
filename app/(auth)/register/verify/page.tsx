@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Camera, IdCard, Images, CheckCircle2 } from 'lucide-react'
+import { signUp } from '@/services/auth'
 
 type UploadSlot = 'selfie' | 'idFront' | 'idBack' | 'portfolio'
 
@@ -108,10 +109,40 @@ export default function CraftsmanVerifyPage() {
     reader.readAsDataURL(file)
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isValid) return
     setIsLoading(true)
-    setTimeout(() => router.push('/otp?role=craftsman'), 800)
+
+    const email = localStorage.getItem('pendingEmail') || ''
+    const phone = localStorage.getItem('pendingPhone') || ''
+    const password = localStorage.getItem('pendingPassword') || ''
+    const name = localStorage.getItem('pendingName') || ''
+
+    try {
+      await signUp({
+        email,
+        password,
+        fullName: name,
+        phone,
+        role: 'worker',
+        governorate: localStorage.getItem('pendingGovernorate') || undefined,
+        area: localStorage.getItem('pendingArea') || undefined,
+      })
+
+      localStorage.removeItem('pendingPhone')
+      localStorage.removeItem('pendingPassword')
+      localStorage.removeItem('pendingName')
+      localStorage.removeItem('pendingEmail')
+      localStorage.removeItem('pendingRole')
+      localStorage.removeItem('pendingGovernorate')
+      localStorage.removeItem('pendingArea')
+      localStorage.removeItem('pendingProfession')
+      localStorage.removeItem('pendingExperience')
+
+      router.push('/dashboard')
+    } catch {
+      setIsLoading(false)
+    }
   }
 
   return (
