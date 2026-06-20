@@ -128,11 +128,12 @@ export default function CraftsmanVerifyPage() {
     const password = localStorage.getItem('pendingPassword') || ''
     const name = localStorage.getItem('pendingName') || ''
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
         data: {
           full_name: name,
           email,
@@ -140,15 +141,16 @@ export default function CraftsmanVerifyPage() {
           role: 'worker',
           governorate: localStorage.getItem('pendingGovernorate') || null,
           area: localStorage.getItem('pendingArea') || null,
-        },
-      },
+        }
+      })
     })
+    const result = await res.json()
 
-    if (error) {
-      if (error.code === 'over_email_send_rate_limit') {
+    if (!res.ok) {
+      if (result.error?.includes('rate_limit') || result.error?.includes('تجاوزت الحد')) {
         setError('لقد تجاوزت الحد المسموح به. الرجاء الانتظار بضع دقائق قبل المحاولة مرة أخرى.')
       } else {
-        setError(error.message)
+        setError(result.error || 'حدث خطأ غير متوقع')
       }
       setIsLoading(false)
       return
@@ -164,7 +166,7 @@ export default function CraftsmanVerifyPage() {
     localStorage.removeItem('pendingProfession')
     localStorage.removeItem('pendingExperience')
 
-    router.push('/check-email')
+    router.push(`/otp?email=${encodeURIComponent(email)}&role=craftsman`)
   }
 
   return (
