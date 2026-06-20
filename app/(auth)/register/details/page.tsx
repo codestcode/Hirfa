@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Briefcase, Clock, Building2, MapPin } from 'lucide-react'
@@ -30,6 +30,13 @@ export default function CraftsmanDetailsPage() {
   const [area, setArea] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [focusField, setFocusField] = useState<FocusField>(null)
+
+  useEffect(() => {
+    setProfession(localStorage.getItem('pendingProfession') || '')
+    setYears(localStorage.getItem('pendingExperience') || '')
+    setGovernorate(localStorage.getItem('pendingGovernorate') || '')
+    setArea(localStorage.getItem('pendingArea') || '')
+  }, [])
 
   const isValid = profession && years && governorate && area
 

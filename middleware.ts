@@ -2,28 +2,33 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 const publicPaths = [
-  '/splash',
-  '/welcome',
-  '/intro',
-  '/role',
-  '/success',
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/otp',
-  '/check-email',
-  '/Verification',
-  '/Proffession',
-]
+    '/splash',
+    '/welcome',
+    '/intro',
+    '/role',
+    '/success',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/otp',
+    '/check-email',
+    '/Verification',
+    '/Proffession',
+    '/api/auth/signup',
+  ]
 
-const workerPaths = ['/dashboard']
-const clientPaths = ['/home', '/bookings', '/profile', '/emergency', '/booking', '/craftsman']
+const workerPaths = ['/home']
+const clientPaths = ['/client-home']
 
 export async function middleware(request: NextRequest) {
   const { supabase, supabaseResponse, user } = await updateSession(request)
 
   const { pathname } = request.nextUrl
+
+  if (pathname.startsWith('/api/')) {
+    return supabaseResponse
+  }
 
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(path + '/')
@@ -45,19 +50,19 @@ export async function middleware(request: NextRequest) {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   const role = profile?.role
 
   if (isWorkerPath && role === 'client') {
     const url = request.nextUrl.clone()
-    url.pathname = '/home'
+    url.pathname = '/client-home'
     return NextResponse.redirect(url)
   }
 
   if (isClientPath && role === 'worker') {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 

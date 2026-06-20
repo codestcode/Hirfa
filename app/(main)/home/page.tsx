@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, Home, ClipboardList, MessageCircle, Wallet, User, Star, Clock, Calendar, MessageSquare, Image as ImageIcon } from 'lucide-react'
+import { Bell, Home, ClipboardList, MessageCircle, Wallet, User, Star, Clock, Calendar, MessageSquare, Image as ImageIcon, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCallback } from 'react'
 
 const quickInsights = [
   { icon: ClipboardList, label: 'طلبات اليوم', value: '12', color: '#FF8A00' },
@@ -29,10 +30,21 @@ const monthlyStats = [
 
 export default function HomePage() {
   const router = useRouter()
-  const { profile, user } = useAuth()
+  const { profile, user, signOut } = useAuth()
   const [isAvailable, setIsAvailable] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'مستخدم'
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'مستخدم'
+
+  const handleLogout = useCallback(async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await signOut()
+    } finally {
+      setLoggingOut(false)
+    }
+  }, [loggingOut, signOut])
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?img=4&s=150'
 
   return (
@@ -44,10 +56,19 @@ export default function HomePage() {
         className="relative shrink-0 w-full z-[2] border-b border-white/5 backdrop-blur-lg bg-[#020617]/80"
       >
         <div className="h-[80px] max-w-[512px] w-full flex items-center justify-between px-5 mx-auto">
-          <button className="relative flex items-center justify-center rounded-full w-10 h-10 bg-bg-input">
-            <Bell size={18} className="text-white" />
-            <div className="absolute rounded-full w-[10px] h-[10px]" style={{ right: '8px', top: '8px', background: 'var(--color-primary)', boxShadow: '0 0 0 2px #020617' }} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="flex items-center justify-center rounded-full w-10 h-10 bg-[#1E2538] hover:bg-[#FF4D4D]/20 transition-colors"
+            >
+              <LogOut size={18} className="text-[#FF4D4D]" />
+            </button>
+            <button className="relative flex items-center justify-center rounded-full w-10 h-10 bg-bg-input">
+              <Bell size={18} className="text-white" />
+              <div className="absolute rounded-full w-[10px] h-[10px]" style={{ right: '8px', top: '8px', background: 'var(--color-primary)', boxShadow: '0 0 0 2px #020617' }} />
+            </button>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end" style={{ gap: '-1px' }}>
