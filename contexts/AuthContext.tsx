@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     return profile
   }, [supabase])

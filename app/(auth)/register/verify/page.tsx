@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Camera, IdCard, Images, CheckCircle2 } from 'lucide-react'
-import { signUp } from '@/services/auth'
+import { createClient } from '@/lib/supabase/client'
 
 type UploadSlot = 'selfie' | 'idFront' | 'idBack' | 'portfolio'
 
@@ -88,6 +88,7 @@ const INITIAL_STATE: SlotState = { preview: null, fileName: null }
 export default function CraftsmanVerifyPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const [slots, setSlots] = useState<Record<UploadSlot, SlotState>>({
     selfie:    { ...INITIAL_STATE },
@@ -110,39 +111,60 @@ export default function CraftsmanVerifyPage() {
   }
 
   const handleNext = async () => {
-    if (!isValid) return
+    if (!isValid || isLoading) return
+
+    const last = localStorage.getItem('signup_last')
+    if (last && Date.now() - Number(last) < 60000) {
+      setError('الرجاء الانتظار دقيقة قبل المحاولة مرة أخرى')
+      return
+    }
+
+    localStorage.setItem('signup_last', Date.now().toString())
     setIsLoading(true)
+    setError('')
 
     const email = localStorage.getItem('pendingEmail') || ''
     const phone = localStorage.getItem('pendingPhone') || ''
     const password = localStorage.getItem('pendingPassword') || ''
     const name = localStorage.getItem('pendingName') || ''
 
-    try {
-      await signUp({
-        email,
-        password,
-        fullName: name,
-        phone,
-        role: 'worker',
-        governorate: localStorage.getItem('pendingGovernorate') || undefined,
-        area: localStorage.getItem('pendingArea') || undefined,
-      })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+          email,
+          phone: phone || null,
+          role: 'worker',
+          governorate: localStorage.getItem('pendingGovernorate') || null,
+          area: localStorage.getItem('pendingArea') || null,
+        },
+      },
+    })
 
-      localStorage.removeItem('pendingPhone')
-      localStorage.removeItem('pendingPassword')
-      localStorage.removeItem('pendingName')
-      localStorage.removeItem('pendingEmail')
-      localStorage.removeItem('pendingRole')
-      localStorage.removeItem('pendingGovernorate')
-      localStorage.removeItem('pendingArea')
-      localStorage.removeItem('pendingProfession')
-      localStorage.removeItem('pendingExperience')
-
-      router.push('/dashboard')
-    } catch {
+    if (error) {
+      if (error.code === 'over_email_send_rate_limit') {
+        setError('لقد تجاوزت الحد المسموح به. الرجاء الانتظار بضع دقائق قبل المحاولة مرة أخرى.')
+      } else {
+        setError(error.message)
+      }
       setIsLoading(false)
+      return
     }
+
+    localStorage.removeItem('pendingPhone')
+    localStorage.removeItem('pendingPassword')
+    localStorage.removeItem('pendingName')
+    localStorage.removeItem('pendingEmail')
+    localStorage.removeItem('pendingRole')
+    localStorage.removeItem('pendingGovernorate')
+    localStorage.removeItem('pendingArea')
+    localStorage.removeItem('pendingProfession')
+    localStorage.removeItem('pendingExperience')
+
+    router.push('/check-email')
   }
 
   return (
@@ -207,6 +229,10 @@ export default function CraftsmanVerifyPage() {
             onPick={handlePick}
             multiple
           />
+
+          {error && (
+            <p className="text-xs text-[#FF4D4D] text-right mt-2">{error}</p>
+          )}
 
           <div className="grid grid-cols-[1fr_1.6fr] gap-3 mt-2">
             <button

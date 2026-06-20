@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff, User, Mail, Lock, MapPin } from 'lucide-react'
 import { AuthInput } from '@/components/shared/AuthInput'
-import { signUp } from '@/services/auth'
+import { createClient } from '@/lib/supabase/client'
 
 const locationData: Record<string, string[]> = {
   'القاهرة': ['مدينة نصر', 'مصر الجديدة', 'المعادي', 'التجمع الخامس', 'شبرا'],
@@ -27,10 +27,20 @@ function RegisterPageContent() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
+  useEffect(() => {
+    setName(localStorage.getItem('pendingName') || '')
+    setEmail(localStorage.getItem('pendingEmail') || '')
+    setPhone(localStorage.getItem('pendingPhone') || '')
+    setPassword(localStorage.getItem('pendingPassword') || '')
+    setGovernorate(localStorage.getItem('pendingGovernorate') || '')
+    setArea(localStorage.getItem('pendingArea') || '')
+  }, [])
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [cooldown, setCooldown] = useState(0)
   const [focusField, setFocusField] = useState<'governorate' | 'area' | null>(null)
 
   const isClient = role === 'client'
@@ -48,39 +58,42 @@ function RegisterPageContent() {
     setError('')
 
     if (isClient) {
-      try {
-        const result = await signUp({
-          email,
-          password,
-          fullName: name,
-          phone: phone || undefined,
-          role: 'client',
-          governorate: governorate || undefined,
-          area: area || undefined,
-        })
+      if (isLoading) return
 
-        localStorage.removeItem('pendingEmail')
-        localStorage.removeItem('pendingPassword')
-        localStorage.removeItem('pendingName')
-        localStorage.removeItem('pendingPhone')
-        localStorage.removeItem('pendingRole')
-        localStorage.removeItem('pendingGovernorate')
-        localStorage.removeItem('pendingArea')
+      const last = localStorage.getItem('signup_last')
+      if (last && Date.now() - Number(last) < 60000) {
+        setError('الرجاء الانتظار دقيقة قبل المحاولة مرة أخرى')
+        setIsLoading(false)
+        return
+      }
 
-        if (result.session) {
-          router.push('/home')
+      localStorage.setItem('signup_last', Date.now().toString())
+      setIsLoading(true)
+      const supabase = createClient()
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            email,
+            phone: phone || null,
+            role,
+            governorate: governorate || null,
+            area: area || null,
+          },
+        },
+      })
+      if (error) {
+        if (error.code === 'over_email_send_rate_limit') {
+          setError('لقد تجاوزت الحد المسموح به. الرجاء الانتظار بضع دقائق قبل المحاولة مرة أخرى.')
         } else {
-          router.push('/check-email')
-        }
-      } catch (err: any) {
-        const msg = err?.message?.toLowerCase?.() || ''
-        if (msg.includes('already') || msg.includes('exists')) {
-          setError('هذا البريد مسجل بالفعل')
-        } else {
-          setError(err?.message || 'فشل إنشاء الحساب')
+          setError(error.message)
         }
         setIsLoading(false)
+        return
       }
+      router.push('/check-email')
     } else {
       localStorage.setItem('pendingEmail', email)
       localStorage.setItem('pendingPassword', password)
@@ -128,23 +141,25 @@ function RegisterPageContent() {
             rightIcon={User}
           />
 
-          <AuthInput
-            type="email"
-            placeholder="البريد الإلكتروني"
-            value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-            dir="ltr"
-            rightIcon={Mail}
-          />
+          <div dir="ltr">
+            <AuthInput
+              type="email"
+              placeholder="البريد الإلكتروني"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              rightIcon={Mail}
+            />
+          </div>
 
-          <AuthInput
-            type="tel"
-            placeholder="رقم الهاتف (اختياري)"
-            value={phone}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-            dir="ltr"
-            rightIcon={User}
-          />
+          <div dir="ltr">
+            <AuthInput
+              type="tel"
+              placeholder="رقم الهاتف (اختياري)"
+              value={phone}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
+              rightIcon={User}
+            />
+          </div>
 
           {isClient && (
             <>

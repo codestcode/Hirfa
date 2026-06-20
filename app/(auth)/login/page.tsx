@@ -27,7 +27,7 @@ function LoginPageContent() {
     try {
       const result = await signIn(email, password)
       const userRole = result.user?.user_metadata?.role || role
-      router.push(userRole === 'worker' ? '/dashboard' : '/home')
+      router.push(userRole === 'worker' ? '/home' : '/client-home')
     } catch (err) {
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
       setIsLoading(false)
