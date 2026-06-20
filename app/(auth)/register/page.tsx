@@ -69,11 +69,12 @@ function RegisterPageContent() {
 
       localStorage.setItem('signup_last', Date.now().toString())
       setIsLoading(true)
-      const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
           data: {
             full_name: name,
             email,
@@ -81,19 +82,21 @@ function RegisterPageContent() {
             role,
             governorate: governorate || null,
             area: area || null,
-          },
-        },
+          }
+        })
       })
-      if (error) {
-        if (error.code === 'over_email_send_rate_limit') {
+      const result = await res.json()
+      
+      if (!res.ok) {
+        if (result.error?.includes('rate_limit') || result.error?.includes('تجاوزت الحد')) {
           setError('لقد تجاوزت الحد المسموح به. الرجاء الانتظار بضع دقائق قبل المحاولة مرة أخرى.')
         } else {
-          setError(error.message)
+          setError(result.error || 'حدث خطأ غير متوقع')
         }
         setIsLoading(false)
         return
       }
-      router.push('/check-email')
+      router.push(`/otp?email=${encodeURIComponent(email)}&role=${role}`)
     } else {
       localStorage.setItem('pendingEmail', email)
       localStorage.setItem('pendingPassword', password)
@@ -282,7 +285,26 @@ function RegisterPageContent() {
             </svg>
           </button>
 
-          <button className="flex items-center justify-center h-12 bg-[#0B0F19] border border-[#1E2538] rounded-xl cursor-pointer hover:bg-slate-900 transition-colors">
+          <button 
+            onClick={async () => {
+              try {
+                setIsLoading(true)
+                const { createClient } = await import('@/lib/supabase/client')
+                const supabase = createClient()
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: `${window.location.origin}/api/auth/callback?role=${role}`
+                  }
+                })
+                if (error) throw error
+              } catch (err) {
+                setError('حدث خطأ أثناء الاتصال بحساب جوجل')
+                setIsLoading(false)
+              }
+            }}
+            className="flex items-center justify-center h-12 bg-[#0B0F19] border border-[#1E2538] rounded-xl cursor-pointer hover:bg-slate-900 transition-colors"
+          >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
