@@ -8,7 +8,7 @@ import {
   LogOut, Bell, Wallet, Settings, Image as ImageIcon, Star,
   ChevronRight,
 } from 'lucide-react'
-import { mockUser } from '@/lib/mock-data'
+import { useAuth } from '@/contexts/AuthContext'
 
 const quickActions = [
   { icon: ImageIcon, label: 'المعرض', href: '/gallery' },
@@ -25,12 +25,18 @@ const monthlyStats = [
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { user, profile, signOut } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoading(true)
-    setTimeout(() => router.push('/login'), 500)
+    await signOut()
+    router.push('/login')
   }
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'مستخدم'
+  const displayPhone = profile?.phone || user?.phone || user?.email || ''
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?img=4&s=150'
 
   return (
     <div
@@ -40,7 +46,6 @@ export default function ProfilePage() {
         background: 'linear-gradient(90deg, rgb(0, 4, 25) 0%, rgb(0, 4, 25) 100%)'
       }}
     >
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -64,13 +69,17 @@ export default function ProfilePage() {
             الملف الشخصي
           </span>
 
-          <div className="flex items-center justify-center rounded-full w-10 h-10" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
-            <Bell size={18} className="text-white" />
-          </div>
+          <button
+            onClick={handleLogout}
+            disabled={isLoading}
+            className="flex items-center justify-center rounded-full w-10 h-10"
+            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+          >
+            <LogOut size={18} className="text-white" />
+          </button>
         </div>
       </motion.div>
 
-      {/* Content */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -78,14 +87,13 @@ export default function ProfilePage() {
         className="flex flex-col items-start relative shrink-0 w-full px-5 pt-6"
         style={{ gap: '20px' }}
       >
-        {/* Profile Section */}
         <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '16px' }}>
           <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
             <div className="flex items-center relative shrink-0 w-full" style={{ gap: '16px' }}>
               <div className="relative flex-shrink-0 overflow-hidden rounded-[28px] w-[72px] h-[72px]" style={{ border: '2px solid rgba(255, 138, 0, 0.3)' }}>
                 <Image
-                  src={mockUser.avatar || 'https://i.pravatar.cc/150?img=4&s=150'}
-                  alt={mockUser.name}
+                  src={avatarUrl}
+                  alt={displayName}
                   fill
                   className="object-cover"
                 />
@@ -93,10 +101,10 @@ export default function ProfilePage() {
 
               <div className="flex-1">
                 <p className="font-bold text-[18px] text-white leading-[28px]">
-                  {mockUser.name}
+                  {displayName}
                 </p>
                 <p className="mt-1 text-[14px]" style={{ color: '#7285bc' }}>
-                  {mockUser.phone}
+                  {displayPhone}
                 </p>
               </div>
 
@@ -113,11 +121,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="text-[14px] leading-[22px]" style={{ color: '#7285bc' }}>
-              نجار محترف متخصص في الأثاث الخشبي والتشطيبات الدقيقة
+              {profile?.role === 'worker' ? 'حرفي محترف' : 'عميل'}
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
             <div className="flex items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
               {quickActions.map(({ icon: Icon, label, href }) => (
@@ -150,7 +157,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Monthly Summary */}
         <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '16px' }}>
           <div className="flex items-center w-full" style={{ gap: '8px' }}>
             <span className="font-bold text-[18px] text-white leading-[28px]">
@@ -194,8 +200,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </motion.div>
-
-
     </div>
   )
 }

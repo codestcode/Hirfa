@@ -4,7 +4,7 @@ import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, User, Smartphone, Mail, Lock, MapPin } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, MapPin } from 'lucide-react'
 import { AuthInput } from '@/components/shared/AuthInput'
 
 const locationData: Record<string, string[]> = {
@@ -19,8 +19,8 @@ function RegisterPageContent() {
   const role = searchParams.get('role') || 'client'
 
   const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [governorate, setGovernorate] = useState('')
   const [area, setArea] = useState('')
   const [password, setPassword] = useState('')
@@ -29,12 +29,14 @@ function RegisterPageContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const [focusField, setFocusField] = useState<'governorate' | 'area' | null>(null)
 
   const isClient = role === 'client'
   const isFormValid =
     name.trim() !== '' &&
-    phone.trim().length >= 10 &&
+    email.trim() !== '' &&
+    email.includes('@') &&
     (!isClient || (governorate !== '' && area !== '')) &&
     password.length >= 8 &&
     password === confirmPassword
@@ -42,15 +44,20 @@ function RegisterPageContent() {
   const handleRegister = () => {
     if (!isFormValid) return
     setIsLoading(true)
+    setError('')
+
+    localStorage.setItem('pendingEmail', email)
+    localStorage.setItem('pendingPassword', password)
+    localStorage.setItem('pendingName', name)
+    localStorage.setItem('pendingRole', role)
+    if (phone) localStorage.setItem('pendingPhone', phone)
+    if (governorate) localStorage.setItem('pendingGovernorate', governorate)
+    if (area) localStorage.setItem('pendingArea', area)
 
     if (isClient) {
-      setTimeout(() => {
-        router.push(`/otp?phone=${encodeURIComponent(phone)}&role=client`)
-      }, 800)
+      router.push(`/otp?email=${encodeURIComponent(email)}&role=client&flow=register`)
     } else {
-      setTimeout(() => {
-        router.push(`/register/details?phone=${encodeURIComponent(phone)}`)
-      }, 800)
+      router.push(`/register/details?email=${encodeURIComponent(email)}`)
     }
   }
 
@@ -89,21 +96,21 @@ function RegisterPageContent() {
           />
 
           <AuthInput
-            type="tel"
-            placeholder="رقم الهاتف"
-            value={phone}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-            dir="ltr"
-            rightIcon={Smartphone}
-          />
-
-          <AuthInput
             type="email"
-            placeholder="البريد الإلكتروني (اختياري)"
+            placeholder="البريد الإلكتروني"
             value={email}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             dir="ltr"
             rightIcon={Mail}
+          />
+
+          <AuthInput
+            type="tel"
+            placeholder="رقم الهاتف (اختياري)"
+            value={phone}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
+            dir="ltr"
+            rightIcon={User}
           />
 
           {isClient && (
@@ -196,6 +203,12 @@ function RegisterPageContent() {
           {confirmPassword && password !== confirmPassword && (
             <p className="text-xs text-[#FF4D4D] text-right">
               كلمة المرور غير متطابقة
+            </p>
+          )}
+
+          {error && (
+            <p className="text-xs text-[#FF4D4D] text-right">
+              {error}
             </p>
           )}
 

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Bell, Home, ClipboardList, MessageCircle, Wallet, User, Star, Clock, Calendar, MessageSquare, Image as ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { mockUser } from '@/lib/mock-data'
+import { useAuth } from '@/contexts/AuthContext'
 
 const quickInsights = [
   { icon: ClipboardList, label: 'طلبات اليوم', value: '12', color: '#FF8A00' },
@@ -29,7 +29,11 @@ const monthlyStats = [
 
 export default function HomePage() {
   const router = useRouter()
+  const { profile, user } = useAuth()
   const [isAvailable, setIsAvailable] = useState(true)
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'مستخدم'
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?img=4&s=150'
 
   return (
     <div dir="rtl" className="min-h-screen relative isolate flex flex-col w-full font-arabic bg-[#020617]">
@@ -51,7 +55,7 @@ export default function HomePage() {
                 مرحباً،
               </span>
               <span className="text-[18px] font-bold leading-[22.5px] text-white tracking-[-0.45px]">
-                محمد السعدني 👋
+                {displayName}
               </span>
             </div>
 
@@ -59,8 +63,8 @@ export default function HomePage() {
               <div className="flex flex-col justify-center items-start rounded-full w-[44px] h-[44px] p-[2px] bg-[var(--gradient-primary)]">
                 <div className="flex-1 self-stretch rounded-full overflow-hidden border-2 border-[#020617]">
                   <Image
-                    src={mockUser.avatar || 'https://i.pravatar.cc/150?img=4&s=150'}
-                    alt={mockUser.name}
+                    src={avatarUrl}
+                    alt={displayName}
                     width={40}
                     height={40}
                     className="object-cover w-full h-full"

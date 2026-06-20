@@ -6,23 +6,32 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { AuthInput } from '@/components/shared/AuthInput'
+import { signIn } from '@/services/auth'
 
 function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const role = searchParams.get('role') || 'client'
 
-  const [identifier, setIdentifier] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleLogin = async () => {
-    if (!identifier || !password) return
+    if (!email || !password) return
     setIsLoading(true)
-    setTimeout(() => {
-      router.push(`/otp?phone=${encodeURIComponent(identifier)}&role=${role}`)
-    }, 800)
+    setError('')
+
+    try {
+      const result = await signIn(email, password)
+      const userRole = result.user?.user_metadata?.role || role
+      router.push(userRole === 'worker' ? '/dashboard' : '/home')
+    } catch (err) {
+      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,10 +61,10 @@ function LoginPageContent() {
 
         <div className="flex flex-col gap-4">
           <AuthInput
-            type="text"
-            placeholder="البريد الإلكتروني أو رقم الهاتف"
-            value={identifier}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIdentifier(e.target.value)}
+            type="email"
+            placeholder="البريد الإلكتروني"
+            value={email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             rightIcon={Mail}
           />
 
@@ -84,9 +93,15 @@ function LoginPageContent() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-xs text-[#FF4D4D] text-center">
+              {error}
+            </p>
+          )}
+
           <button
             onClick={handleLogin}
-            disabled={isLoading || !identifier || !password}
+            disabled={isLoading || !email || !password}
             className="w-full h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}

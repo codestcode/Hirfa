@@ -36,6 +36,12 @@ export default function CraftsmanDetailsPage() {
   const handleNext = () => {
     if (!isValid) return
     setIsLoading(true)
+
+    localStorage.setItem('pendingProfession', profession)
+    localStorage.setItem('pendingExperience', years)
+    localStorage.setItem('pendingGovernorate', governorate)
+    localStorage.setItem('pendingArea', area)
+
     setTimeout(() => router.push('/register/verify'), 800)
   }
 
