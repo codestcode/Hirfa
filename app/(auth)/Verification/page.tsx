@@ -25,7 +25,7 @@ export default function VerificationPage() {
     }
 
     const handleNext = () => {
-        router.push('/home')
+        router.push('/worker/home')
     }
 
     const handleBack = () => {

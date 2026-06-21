@@ -19,8 +19,8 @@ const publicPaths = [
     '/api/auth/signup',
   ]
 
-const workerPaths = ['/home']
-const clientPaths = ['/client-home']
+const workerPaths = ['/worker']
+const clientPaths = ['/client']
 
 export async function middleware(request: NextRequest) {
   const { supabase, supabaseResponse, user } = await updateSession(request)
@@ -57,13 +57,13 @@ export async function middleware(request: NextRequest) {
 
   if (isWorkerPath && role === 'client') {
     const url = request.nextUrl.clone()
-    url.pathname = '/client-home'
+    url.pathname = '/client/home'
     return NextResponse.redirect(url)
   }
 
   if (isClientPath && role === 'worker') {
     const url = request.nextUrl.clone()
-    url.pathname = '/home'
+    url.pathname = '/worker/home'
     return NextResponse.redirect(url)
   }
 

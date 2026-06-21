@@ -13,7 +13,7 @@ export function WorkerRoute({ children }: { children: ReactNode }) {
     if (!user) {
       router.push('/login')
     } else if (profile && profile.role !== 'worker') {
-      router.push('/home')
+      router.push('/client/home')
     }
   }, [user, profile, loading, router])
 

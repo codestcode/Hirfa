@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 
-export default function SuccessPage() {
+function SuccessPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const role = searchParams.get('role') || 'client'
   const [isLoading, setIsLoading] = useState(false)
 
   const handleContinue = () => {
     setIsLoading(true)
-    router.push('/profile')
+    router.push(role === 'worker' ? '/worker/profile' : '/client/home')
   }
 
   // confetti dots — mix of primary & accent colors
@@ -143,7 +145,7 @@ export default function SuccessPage() {
 
         {/* skip */}
         <button
-          onClick={() => router.push('/home')}
+          onClick={() => router.push(role === 'worker' ? '/worker/home' : '/client/home')}
           style={{
             marginTop: 'var(--space-4)',
             background: 'none',
@@ -159,5 +161,15 @@ export default function SuccessPage() {
       </motion.div>
 
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050814] flex items-center justify-center" />
+    }>
+      <SuccessPageContent />
+    </Suspense>
   )
 }
