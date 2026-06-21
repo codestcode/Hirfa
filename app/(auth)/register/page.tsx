@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, Suspense, useEffect } from 'react'
+import React, { useState, Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, User, Mail, Lock, MapPin } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, MapPin, Camera } from 'lucide-react'
 import { AuthInput } from '@/components/shared/AuthInput'
 import { createClient } from '@/lib/supabase/client'
 
@@ -26,6 +26,8 @@ function RegisterPageContent() {
   const [area, setArea] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [avatar, setAvatar] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setName(localStorage.getItem('pendingName') || '')
@@ -34,6 +36,7 @@ function RegisterPageContent() {
     setPassword(localStorage.getItem('pendingPassword') || '')
     setGovernorate(localStorage.getItem('pendingGovernorate') || '')
     setArea(localStorage.getItem('pendingArea') || '')
+    setAvatar(localStorage.getItem('pendingAvatar') || null)
   }, [])
 
   const [showPassword, setShowPassword] = useState(false)
@@ -51,6 +54,17 @@ function RegisterPageContent() {
     (!isClient || (governorate !== '' && area !== '')) &&
     password.length >= 8 &&
     password === confirmPassword
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatar(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleRegister = async () => {
     if (!isFormValid) return
@@ -82,6 +96,7 @@ function RegisterPageContent() {
             role,
             governorate: governorate || null,
             area: area || null,
+            avatar_url: avatar || null
           }
         })
       })
@@ -105,6 +120,7 @@ function RegisterPageContent() {
       if (phone) localStorage.setItem('pendingPhone', phone)
       if (governorate) localStorage.setItem('pendingGovernorate', governorate)
       if (area) localStorage.setItem('pendingArea', area)
+      if (avatar) localStorage.setItem('pendingAvatar', avatar)
 
       router.push(`/register/details?email=${encodeURIComponent(email)}`)
     }
@@ -117,12 +133,24 @@ function RegisterPageContent() {
     >
       <div className="w-full max-w-[400px] flex flex-col my-8">
         <div className="flex justify-center mb-6">
-          <Image
-            src="/hirfa_logo.svg"
-            alt="Logo"
-            width={72}
-            height={72}
-            priority
+          <div className="relative w-24 h-24 rounded-full border-2 border-[#FF8A00] p-1 cursor-pointer hover:opacity-90 transition-opacity" onClick={() => fileInputRef.current?.click()}>
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-[#0F1322] flex items-center justify-center">
+              {avatar ? (
+                <Image src={avatar} alt="Avatar" fill className="object-cover" />
+              ) : (
+                <Image src="/hirfa_logo.svg" alt="Logo" width={48} height={48} />
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 bg-[#FF8A00] rounded-full flex items-center justify-center border-2 border-[#050814]">
+              <Camera size={14} className="text-white" />
+            </div>
+          </div>
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            ref={fileInputRef}
+            onChange={handleImageUpload}
           />
         </div>
 
@@ -131,7 +159,7 @@ function RegisterPageContent() {
             {isClient ? 'إنشاء حساب عميل' : 'إنشاء حساب حرفي'}
           </h1>
           <p className="text-xs text-[#6B7A99]">
-            أدخل بياناتك الأساسية للبدء
+            {avatar ? 'تم اختيار الصورة، أكمل بياناتك' : 'اضغط على الدائرة لاختيار صورة شخصية (اختياري)'}
           </p>
         </div>
 

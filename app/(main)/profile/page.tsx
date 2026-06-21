@@ -1,205 +1,111 @@
 'use client'
 
-import { useState } from 'react'
+import React from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import Image from 'next/image'
-import {
-  LogOut, Bell, Wallet, Settings, Image as ImageIcon, Star,
-  ChevronRight,
+import { 
+  LogOut, Star, Pencil, Fingerprint, LayoutGrid, Calendar, Wallet, CreditCard,
+  Headphones, FileText, Image as ImageIcon, CalendarDays
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-
-const quickActions = [
-  { icon: ImageIcon, label: 'المعرض', href: '/gallery' },
-  { icon: Wallet, label: 'المحفظة', href: '/wallet' },
-  { icon: Settings, label: 'الإعدادات', href: '/settings' },
-]
-
-const monthlyStats = [
-  { label: 'الطلبات المكتملة', value: '24' },
-  { label: 'متوسط التقييم', value: '4.9', icon: Star },
-  { label: 'سرعة الرد', value: '98%' },
-  { label: 'صافي الأرباح', value: '8,400', currency: 'ج.م' },
-]
+import { createClient } from '@/lib/supabase/client'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SubPageLayout } from '@/components/ui/SubPageLayout'
+import { StatCard } from '@/components/ui/profile/StatCard'
+import { MenuGroup } from '@/components/ui/profile/MenuGroup'
+import { MenuLink } from '@/components/ui/profile/MenuLink'
+import { ProfileAvatarInfo } from '@/components/ui/profile/ProfileAvatarInfo'
 
 export default function ProfilePage() {
+  const { profile } = useAuth()
+  const supabase = createClient()
   const router = useRouter()
-  const { user, profile, signOut } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleLogout = async () => {
-    setIsLoading(true)
-    await signOut()
+    await supabase.auth.signOut()
     router.push('/login')
   }
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'مستخدم'
-  const displayPhone = profile?.phone || user?.phone || user?.email || ''
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?img=4&s=150'
+  const menuGroups = [
+    {
+      title: 'الإعدادات الشخصية',
+      items: [
+        { title: 'تعديل الملف الشخصي', href: '/profile/edit', icon: Pencil, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'معرض الأعمال', href: '/profile/gallery', icon: ImageIcon, color: '#FFB800', bg: '#1A1813' },
+        { title: 'التوثيق والهوية', href: '/profile/verification', icon: Fingerprint, color: '#FFB800', bg: '#1A1813' }
+      ]
+    },
+    {
+      title: 'إعدادات الخدمة',
+      items: [
+        { title: 'تخصصات الخدمات', href: '/profile/services', icon: LayoutGrid, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'جدول العمل والتوافر', href: '/profile/schedule', icon: Calendar, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'المواعيد والحجوزات', href: '/profile/calendar', icon: CalendarDays, color: '#FF8A00', bg: '#1E1B15' }
+      ]
+    },
+    {
+      title: 'الشؤون المالية',
+      items: [
+        { title: 'الأرباح والمحفظة', href: '/wallet', icon: Wallet, color: '#FFB800', bg: '#1A1813' },
+        { title: 'طرق الدفع', href: '/profile/payment-methods', icon: CreditCard, color: '#FFB800', bg: '#1A1813' }
+      ]
+    },
+    {
+      title: 'الدعم والخصوصية',
+      items: [
+        { title: 'مركز المساعدة', href: '/profile/help', icon: Headphones, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'شروط الخدمة', href: '/profile/terms', icon: FileText, color: '#FF8A00', bg: '#1E1B15' }
+      ]
+    }
+  ]
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen relative isolate flex flex-col items-start w-full font-arabic"
-      style={{ 
-        background: 'linear-gradient(90deg, rgb(0, 4, 25) 0%, rgb(0, 4, 25) 100%)'
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-lg relative shrink-0 w-full z-[2]"
-        style={{ 
-          background: 'rgba(15, 23, 42, 0.8)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-        }}
-      >
-        <div className="h-[80px] max-w-[512px] w-full flex items-center justify-between px-5">
-          <button
-            onClick={() => router.back()}
-            className="relative flex items-center justify-center rounded-full w-10 h-10"
-            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
-          >
-            <ChevronRight size={20} className="text-white" />
-            <div className="absolute start-2 top-2 w-[10px] h-[10px] rounded-full bg-[#ff8a00]" />
-          </button>
+    <SubPageLayout>
+      <PageHeader title="الحساب الشخصي" showBack={false} />
 
-          <span className="font-bold text-lg text-white">
-            الملف الشخصي
-          </span>
+      <ProfileAvatarInfo 
+        avatarUrl={profile?.avatar_url || undefined}
+        fullName={profile?.full_name || 'حرفي'}
+        profession={profile?.profession || 'بدون تخصص'}
+        categoryLevel={profile?.category_level || 'جديد'}
+        onClick={() => router.push('/profile/summary')}
+      />
 
-          <button
+      <div className="grid grid-cols-3 gap-3 px-6 mb-8">
+        <StatCard 
+          label="التقييم" 
+          value={<><Star size={14} className="text-[#FFB800] fill-[#FFB800]" /> {profile?.rating || '0.0'}</>} 
+        />
+        <StatCard 
+          label="المهام" 
+          value={profile?.completed_orders || '0'} 
+        />
+        <StatCard 
+          label="الرصيد" 
+          value={<span className="text-[#FF8A00]">{profile?.total_earnings || '0'} <span className="text-[10px] font-normal">ج.م</span></span>} 
+        />
+      </div>
+
+      <div className="flex flex-col gap-6 px-6 mb-8">
+        {menuGroups.map((group, i) => (
+          <MenuGroup key={i} title={group.title} items={group.items} />
+        ))}
+
+        <div className="flex flex-col bg-[#0A0D1A] rounded-2xl border border-white/5 overflow-hidden">
+          <MenuLink 
+            title="تسجيل الخروج" 
+            icon={LogOut} 
+            color="#EF4444" 
+            bg="#1E1212" 
+            isLast 
             onClick={handleLogout}
-            disabled={isLoading}
-            className="flex items-center justify-center rounded-full w-10 h-10"
-            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
-          >
-            <LogOut size={18} className="text-white" />
-          </button>
+            isDestructive
+          />
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex flex-col items-start relative shrink-0 w-full px-5 pt-6"
-        style={{ gap: '20px' }}
-      >
-        <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '16px' }}>
-          <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
-            <div className="flex items-center relative shrink-0 w-full" style={{ gap: '16px' }}>
-              <div className="relative flex-shrink-0 overflow-hidden rounded-[28px] w-[72px] h-[72px]" style={{ border: '2px solid rgba(255, 138, 0, 0.3)' }}>
-                <Image
-                  src={avatarUrl}
-                  alt={displayName}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="flex-1">
-                <p className="font-bold text-[18px] text-white leading-[28px]">
-                  {displayName}
-                </p>
-                <p className="mt-1 text-[14px]" style={{ color: '#7285bc' }}>
-                  {displayPhone}
-                </p>
-              </div>
-
-              <button
-                onClick={() => router.push('/profile/edit')}
-                className="flex items-center justify-center rounded-[20px] w-10 h-10"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgb(255, 138, 0) 0%, rgb(255, 184, 0) 100%)',
-                  boxShadow: '0px 4px 6px rgba(255, 138, 0, 0.3)'
-                }}
-              >
-                <Settings size={18} className="text-white" />
-              </button>
-            </div>
-
-            <div className="text-[14px] leading-[22px]" style={{ color: '#7285bc' }}>
-              {profile?.role === 'worker' ? 'حرفي محترف' : 'عميل'}
-            </div>
-          </div>
-
-          <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
-            <div className="flex items-start relative shrink-0 w-full" style={{ gap: '12px' }}>
-              {quickActions.map(({ icon: Icon, label, href }) => (
-                <button
-                  key={label}
-                  onClick={() => router.push(href)}
-                  className="flex-1 flex flex-col items-center backdrop-blur-lg"
-                  style={{ 
-                    gap: '8px',
-                    padding: '21px',
-                    borderRadius: '28px',
-                    background: 'rgba(30, 41, 59, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)'
-                  }}
-                >
-                  <div className="flex items-center justify-center rounded-[20px] w-[56px] h-[56px]"
-                    style={{ 
-                      background: 'linear-gradient(44.999999999999986deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%)',
-                      border: '1px solid rgba(168, 85, 247, 0.2)'
-                    }}
-                  >
-                    <Icon size={24} style={{ color: '#c084fc' }} />
-                  </div>
-                  <span className="font-bold text-[14px] text-white">
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-start relative shrink-0 w-full" style={{ gap: '16px' }}>
-          <div className="flex items-center w-full" style={{ gap: '8px' }}>
-            <span className="font-bold text-[18px] text-white leading-[28px]">
-              أداؤك الشهري
-            </span>
-            <div className="rounded-full w-[6px] h-[20px] bg-[#ffb800]" />
-          </div>
-
-          <div 
-            className="flex flex-col items-start relative shrink-0 w-full overflow-hidden"
-            style={{ 
-              padding: '29px',
-              borderRadius: '28px',
-              background: 'linear-gradient(149.88626684901757deg, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.05)'
-            }}
-          >
-            <div className="grid grid-cols-2 relative w-full" style={{ gap: '32px' }}>
-              {monthlyStats.map(({ label, value, icon: Icon, currency }) => (
-                <div key={label} className="flex flex-col items-start" style={{ gap: '4px' }}>
-                  <span className="font-bold uppercase text-[11px] leading-[16.5px]" style={{ 
-                    letterSpacing: '0.48px',
-                    color: '#7285bc'
-                  }}>
-                    {label}
-                  </span>
-                  <div className="flex items-center" style={{ gap: '6px' }}>
-                    {Icon && <Star size={15} className="text-yellow-400" />}
-                    <span className="font-bold text-[30px] text-white leading-[36px]">
-                      {value}
-                    </span>
-                    {currency && (
-                      <span className="text-[12px] leading-[16px] opacity-60 text-white">
-                        {currency}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+      <div className="flex justify-center mb-8">
+        <span className="text-xs text-[#4B5A7A]">حرفة - الإصدار 2.4.0</span>
+      </div>
+    </SubPageLayout>
   )
 }
