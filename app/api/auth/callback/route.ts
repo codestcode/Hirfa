@@ -34,7 +34,7 @@ export async function GET(request: Request) {
         finalRole = profile.role || role
       }
 
-      const redirectPath = finalRole === 'worker' ? '/home' : '/client-home'
+      const redirectPath = finalRole === 'worker' ? '/worker/home' : '/client/home'
       return NextResponse.redirect(`${origin}${redirectPath}`)
     }
   }
