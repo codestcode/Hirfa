@@ -47,9 +47,9 @@ function OTPPageContent() {
     }
 
     if (role === 'craftsman') {
-      router.push('/home')
+      router.push('/worker/home')
     } else {
-      router.push('/home')
+      router.push('/client/home')
     }
   }
 
@@ -98,9 +98,13 @@ function OTPPageContent() {
           أدخل رمز التحقق
         </h1>
 
-        <p className="text-sm text-[#6B7A99] leading-relaxed mb-6">
+        <p className="text-sm text-[#6B7A99] leading-relaxed mb-2">
           أدخل الرمز المكون من 6 أرقام المرسل إلى <br />
           <span className="text-[#FF8A00] font-semibold" dir="ltr">{email}</span>
+        </p>
+
+        <p className="text-xs text-[#6B7A99]/70 mb-6">
+          إذا لم تجد الرمز في صندوق الوارد، يرجى التحقق من مجلد البريد غير المرغوب فيه (Spam)
         </p>
 
         <div className="w-full mb-8">
