@@ -27,7 +27,6 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
     return (
       <Link href={`/craftsman/${craftsman.id}`}>
         <div className="w-40 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer">
-          {/* Image */}
           <div className="relative w-full h-32 bg-muted">
             <Image
               src={craftsman.avatar}
@@ -42,7 +41,6 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
             )}
           </div>
 
-          {/* Info */}
           <div className="p-3 space-y-2">
             <div>
               <h4 className="font-bold text-sm text-foreground font-cairo line-clamp-1">
@@ -53,7 +51,6 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
               </p>
             </div>
 
-            {/* Rating */}
             <div className="flex items-center gap-1">
               <div className="flex items-center gap-0.5">
                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
@@ -66,13 +63,11 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
               </span>
             </div>
 
-            {/* Distance */}
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="w-3 h-3" />
               <span>{craftsman.distance} كم</span>
             </div>
 
-            {/* Tier Badge */}
             <div className="text-xs font-semibold text-primary bg-primary/10 rounded-full px-2 py-1 text-center">
               {tierLabels[craftsman.tier]}
             </div>
@@ -81,12 +76,9 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
       </Link>
     )
   }
-
-  // Full variant
   return (
     <Link href={`/craftsman/${craftsman.id}`}>
       <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer p-3 flex gap-3">
-        {/* Avatar */}
         <div className="flex-shrink-0">
           <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2" style={{borderColor: tierColors[craftsman.tier]}}>
             <Image
@@ -98,7 +90,6 @@ export function CraftsmanCard({ craftsman, variant = 'full' }: CraftsmanCardProp
           </div>
         </div>
 
-        {/* Info */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">

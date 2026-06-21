@@ -141,6 +141,7 @@ export default function CraftsmanVerifyPage() {
           role: 'worker',
           governorate: localStorage.getItem('pendingGovernorate') || null,
           area: localStorage.getItem('pendingArea') || null,
+          avatar_url: localStorage.getItem('pendingAvatar') || null,
         }
       })
     })

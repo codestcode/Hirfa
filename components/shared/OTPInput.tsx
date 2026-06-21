@@ -82,7 +82,6 @@ export function OTPInput({ value, onChange, onComplete, length = 6 }: OTPInputPr
                      }`}
           onBlur={e => {
             if (!e.currentTarget.value) {
-              // Optional: reset styles on blur if needed
             }
           }}
         />
