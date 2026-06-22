@@ -15,6 +15,13 @@ export interface Profile {
   avatar_url: string | null
   governorate: string | null
   area: string | null
+  profession?: string | null
+  category_level?: string | null
+  rating?: number | null
+  total_earnings?: number | null
+  completed_orders?: number | null
+  response_rate?: number | null
+  is_available?: boolean | null
   created_at: string
   updated_at: string
 }
