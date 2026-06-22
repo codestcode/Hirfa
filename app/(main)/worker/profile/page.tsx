@@ -29,31 +29,31 @@ export default function ProfilePage() {
     {
       title: 'الإعدادات الشخصية',
       items: [
-        { title: 'تعديل الملف الشخصي', href: '/profile/edit', icon: Pencil, color: '#FF8A00', bg: '#1E1B15' },
-        { title: 'معرض الأعمال', href: '/profile/gallery', icon: ImageIcon, color: '#FFB800', bg: '#1A1813' },
-        { title: 'التوثيق والهوية', href: '/profile/verification', icon: Fingerprint, color: '#FFB800', bg: '#1A1813' }
+        { title: 'تعديل الملف الشخصي', href: '/worker/profile/edit', icon: Pencil, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'معرض الأعمال', href: '/worker/profile/gallery', icon: ImageIcon, color: '#FFB800', bg: '#1A1813' },
+        { title: 'التوثيق والهوية', href: '/worker/profile/verification', icon: Fingerprint, color: '#FFB800', bg: '#1A1813' }
       ]
     },
     {
       title: 'إعدادات الخدمة',
       items: [
-        { title: 'تخصصات الخدمات', href: '/profile/services', icon: LayoutGrid, color: '#FF8A00', bg: '#1E1B15' },
-        { title: 'جدول العمل والتوافر', href: '/profile/schedule', icon: Calendar, color: '#FF8A00', bg: '#1E1B15' },
-        { title: 'المواعيد والحجوزات', href: '/profile/calendar', icon: CalendarDays, color: '#FF8A00', bg: '#1E1B15' }
+        { title: 'تخصصات الخدمات', href: '/worker/profile/services', icon: LayoutGrid, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'جدول العمل والتوافر', href: '/worker/profile/schedule', icon: Calendar, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'المواعيد والحجوزات', href: '/worker/profile/calendar', icon: CalendarDays, color: '#FF8A00', bg: '#1E1B15' }
       ]
     },
     {
       title: 'الشؤون المالية',
       items: [
-        { title: 'الأرباح والمحفظة', href: '/wallet', icon: Wallet, color: '#FFB800', bg: '#1A1813' },
-        { title: 'طرق الدفع', href: '/profile/payment-methods', icon: CreditCard, color: '#FFB800', bg: '#1A1813' }
+        { title: 'الأرباح والمحفظة', href: '/worker/wallet', icon: Wallet, color: '#FFB800', bg: '#1A1813' },
+        { title: 'طرق الدفع', href: '/worker/profile/payment-methods', icon: CreditCard, color: '#FFB800', bg: '#1A1813' }
       ]
     },
     {
       title: 'الدعم والخصوصية',
       items: [
-        { title: 'مركز المساعدة', href: '/profile/help', icon: Headphones, color: '#FF8A00', bg: '#1E1B15' },
-        { title: 'شروط الخدمة', href: '/profile/terms', icon: FileText, color: '#FF8A00', bg: '#1E1B15' }
+        { title: 'مركز المساعدة', href: '/worker/profile/help', icon: Headphones, color: '#FF8A00', bg: '#1E1B15' },
+        { title: 'شروط الخدمة', href: '/worker/profile/terms', icon: FileText, color: '#FF8A00', bg: '#1E1B15' }
       ]
     }
   ]
@@ -67,7 +67,7 @@ export default function ProfilePage() {
         fullName={profile?.full_name || 'حرفي'}
         profession={profile?.profession || 'بدون تخصص'}
         categoryLevel={profile?.category_level || 'جديد'}
-        onClick={() => router.push('/profile/summary')}
+        onClick={() => router.push('/worker/profile/summary')}
       />
 
       <div className="grid grid-cols-3 gap-3 px-6 mb-8">
