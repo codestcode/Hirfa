@@ -13,7 +13,7 @@ function SuccessPageContent() {
 
   const handleContinue = () => {
     setIsLoading(true)
-    router.push(role === 'worker' ? '/worker/profile' : '/client/home')
+    router.push(role === 'worker' ? '/profile' : '/client/home')
   }
 
   // confetti dots — mix of primary & accent colors
