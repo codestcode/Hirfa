@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       type: 'signup',
       email,
       password,
-      data
+      options: { data }
     })
 
     if (linkError) {
