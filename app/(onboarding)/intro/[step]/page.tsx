@@ -41,7 +41,7 @@ const ONBOARDING_STEPS = [
   }
 ]
 
-const BG_ICONS = [
+const BG_ICONS: Array<{ Icon: any; top?: string; bottom?: string; left?: string; right?: string; rotate: number; size: number }> = [
   { Icon: Wrench,      top: '6%',  left: '4%',   rotate: -20, size: 72 },
   { Icon: Droplets,    top: '12%', right: '6%',  rotate: 15,  size: 52 },
   { Icon: Zap,         top: '32%', left: '2%',   rotate: 10,  size: 60 },
