@@ -49,7 +49,7 @@ export default function ProfileSummaryPage() {
         {loading ? <PageLoader /> : (
           <>
             <div className="mb-8 mt-8">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-sm">التخصصات والخدمات</h3><button onClick={() => router.push('/profile/services')} className="text-[10px] font-bold text-[#FF8A00] hover:underline">تعديل الخدمات</button></div>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-sm">التخصصات والخدمات</h3><button onClick={() => router.push('/worker/profile/services')} className="text-[10px] font-bold text-[#FF8A00] hover:underline">تعديل الخدمات</button></div>
               <div className="grid grid-cols-2 gap-3">
                 {services.length ? services.map((s) => <ServiceSummaryCard key={s.id} name={s.name} price={s.price} icon={s.icon} />) : <div className="col-span-2 text-center text-[#6B7A99] text-xs py-4 border border-dashed border-white/10 rounded-2xl">لا يوجد خدمات مضافة</div>}
               </div>

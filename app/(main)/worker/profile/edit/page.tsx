@@ -61,7 +61,7 @@ export default function EditProfilePage() {
     }).eq('id', profile.id)
 
     setLoading(false)
-    router.push('/profile')
+    router.push('/worker/profile')
     router.refresh()
   }
 
