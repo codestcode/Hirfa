@@ -73,11 +73,11 @@ export default function NotFoundPage() {
           className="flex flex-col items-center gap-4 -mt-2"
         >
           <h1 className="text-3xl md:text-[40px] font-bold text-white text-center leading-tight">
-            الصفحة غير موجودة
+          يبدو أن الحرفي لم يجد هذا العنوان! 🛠️
           </h1>
 
           <p className="text-sm md:text-base text-[#7285bc] text-center max-w-[340px] md:max-w-[480px] leading-7">
-            عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها. يمكنك العودة إلى الصفحة الرئيسية
+لا تقلق، سنساعدك في الوصول إلى وجهتك.
           </p>
 
           <motion.button

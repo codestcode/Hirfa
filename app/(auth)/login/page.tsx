@@ -25,9 +25,61 @@ function LoginPageContent() {
     setError('')
 
     try {
-      const result = await signIn(email, password)
-      const userRole = result.user?.user_metadata?.role || role
-      router.push(userRole === 'worker' ? '/worker/home' : '/client/home')
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+      
+      if (authError) throw authError
+      
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authData.user.id)
+        .maybeSingle()
+
+      const { data: adminRules } = await supabase.from('admin_rules').select('pattern')
+      const isAdmin = adminRules?.some(rule => 
+        authData.user.email === rule.pattern || authData.user.email?.endsWith(rule.pattern)
+      )
+
+      if (isAdmin && profile?.role !== 'admin') {
+        const { error: upsertErr } = await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          role: 'admin',
+          email: authData.user.email,
+          full_name: authData.user.user_metadata?.full_name || 'أدمن'
+        })
+        if (upsertErr) throw upsertErr
+        profile = { role: 'admin' }
+      } else if (!profile) {
+        let metaRole = authData.user.user_metadata?.role || 'client'
+        if (metaRole === 'craftsman') metaRole = 'worker'
+        
+        const newProfile = {
+          id: authData.user.id,
+          role: metaRole,
+          full_name: authData.user.user_metadata?.full_name || 'مستخدم جديد',
+          email: authData.user.email,
+          avatar_url: authData.user.user_metadata?.avatar_url || authData.user.user_metadata?.picture || null,
+        }
+        const { error: insertErr } = await supabase.from('profiles').insert(newProfile)
+        if (insertErr) throw insertErr
+        profile = { role: metaRole }
+      }
+
+      const userRole = profile?.role || 'client'
+      
+      if (userRole === 'admin') {
+        router.push('/admin')
+      } else if (userRole === 'worker') {
+        router.push('/worker/home')
+      } else {
+        router.push('/client/home')
+      }
     } catch (err) {
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
       setIsLoading(false)
@@ -155,7 +207,7 @@ function LoginPageContent() {
         <div className="text-center mt-8">
           <p className="text-sm text-[#6B7A99]">
             ليس لديك حساب؟{' '}
-            <Link href={`/register?role=${role}`} className="text-[#FF8A00] font-bold no-underline">
+            <Link href="/role" className="text-[#FF8A00] font-bold no-underline">
               سجل الآن
             </Link>
           </p>

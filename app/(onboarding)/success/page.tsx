@@ -16,7 +16,6 @@ function SuccessPageContent() {
     router.push(role === 'worker' ? '/profile' : '/client/home')
   }
 
-  // confetti dots — mix of primary & accent colors
   const dots = [
     { color: 'var(--blue-500)',   size: 10 },
     { color: 'var(--orange-500)', size: 8  },

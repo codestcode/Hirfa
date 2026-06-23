@@ -12,12 +12,15 @@ export function useVerification() {
   const [fetching, setFetching] = useState(true)
   const [status, setStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified')
 
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null)
+
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('verification_status, id_front_url, id_back_url, selfie_url').eq('id', user.id).single()
+    supabase.from('profiles').select('verification_status, rejection_reason, id_front_url, id_back_url, selfie_url').eq('id', user.id).single()
       .then(({ data }) => {
         if (data) {
           setStatus(data.verification_status as any || 'unverified')
+          setRejectionReason(data.rejection_reason)
           setFrontImage(data.id_front_url); setBackImage(data.id_back_url); setSelfieImage(data.selfie_url);
         }
         setFetching(false)
@@ -33,10 +36,11 @@ export function useVerification() {
     e.preventDefault()
     if (!user) return
     setLoading(true)
-    await supabase.from('profiles').update({ verification_status: 'pending', id_front_url: frontImage, id_back_url: backImage, selfie_url: selfieImage }).eq('id', user.id)
+    await supabase.from('profiles').update({ verification_status: 'pending', rejection_reason: null, id_front_url: frontImage, id_back_url: backImage, selfie_url: selfieImage }).eq('id', user.id)
     setStatus('pending')
+    setRejectionReason(null)
     setLoading(false)
   }
 
-  return { frontImage, setFrontImage, backImage, setBackImage, selfieImage, setSelfieImage, loading, fetching, status, handleImage, handleSubmit }
+  return { frontImage, setFrontImage, backImage, setBackImage, selfieImage, setSelfieImage, loading, fetching, status, rejectionReason, handleImage, handleSubmit }
 }

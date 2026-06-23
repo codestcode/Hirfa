@@ -97,7 +97,7 @@ export default function CraftsmanVerifyPage() {
     portfolio: { ...INITIAL_STATE },
   })
 
-  const isValid = slots.selfie.preview && slots.idFront.preview && slots.idBack.preview
+  const isValid = slots.selfie.preview && slots.idFront.preview && slots.idBack.preview && slots.portfolio.preview
 
   const handlePick = (slot: UploadSlot, file: File) => {
     const reader = new FileReader()
@@ -111,7 +111,17 @@ export default function CraftsmanVerifyPage() {
   }
 
   const handleNext = async () => {
-    if (!isValid || isLoading) return
+    if (!isValid) {
+      const missing = []
+      if (!slots.selfie.preview) missing.push('الصورة الشخصية')
+      if (!slots.idFront.preview) missing.push('صورة الهوية (الوجه)')
+      if (!slots.idBack.preview) missing.push('صورة الهوية (الخلف)')
+      if (!slots.portfolio.preview) missing.push('نماذج الأعمال')
+      
+      setError('يرجى إرفاق: ' + missing.join('، '))
+      return
+    }
+    if (isLoading) return
 
     const last = localStorage.getItem('signup_last')
     if (last && Date.now() - Number(last) < 60000) {
@@ -141,7 +151,7 @@ export default function CraftsmanVerifyPage() {
           role: 'worker',
           governorate: localStorage.getItem('pendingGovernorate') || null,
           area: localStorage.getItem('pendingArea') || null,
-          avatar_url: localStorage.getItem('pendingAvatar') || null,
+          profession: localStorage.getItem('pendingProfession') || null,
         }
       })
     })
@@ -247,7 +257,7 @@ export default function CraftsmanVerifyPage() {
 
             <button
               onClick={handleNext}
-              disabled={!isValid || isLoading}
+              disabled={isLoading}
               className="h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'جاري...' : 'التالي'}

@@ -4,7 +4,7 @@ export type PaymentMethod = 'fawry' | 'instapay' | 'card' | 'cash'
 export type EmergencyType = 'water-leak' | 'power-cut' | 'door-break' | 'fire' | 'gas' | 'other'
 export type JobStatus = 'confirmed' | 'en-route' | 'arrived' | 'in-progress' | 'completed'
 
-export type UserRole = 'client' | 'worker'
+export type UserRole = 'client' | 'worker' | 'admin'
 
 export interface Profile {
   id: string
@@ -22,6 +22,7 @@ export interface Profile {
   completed_orders?: number | null
   response_rate?: number | null
   is_available?: boolean | null
+  verified?: boolean
   created_at: string
   updated_at: string
 }

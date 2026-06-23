@@ -37,11 +37,21 @@ export default function CraftsmanDetailsPage() {
     setGovernorate(localStorage.getItem('pendingGovernorate') || '')
     setArea(localStorage.getItem('pendingArea') || '')
   }, [])
-
+  const [error, setError] = useState('')
   const isValid = profession && years && governorate && area
 
   const handleNext = () => {
-    if (!isValid) return
+    if (!isValid) {
+      const missing = []
+      if (!profession) missing.push('التخصص/المهنة')
+      if (!years) missing.push('سنوات الخبرة')
+      if (!governorate) missing.push('المحافظة')
+      if (!area) missing.push('المنطقة')
+      
+      setError('يرجى إكمال البيانات التالية: ' + missing.join('، '))
+      return
+    }
+    setError('')
     setIsLoading(true)
 
     localStorage.setItem('pendingProfession', profession)
@@ -187,14 +197,20 @@ export default function CraftsmanDetailsPage() {
             >
               السابق
             </button>
-
+            <div className="flex flex-col gap-2">
+            {error && (
+              <p className="text-xs text-[#FF4D4D] text-right">
+                {error}
+              </p>
+            )}
             <button
               onClick={handleNext}
-              disabled={!isValid || isLoading}
-              className="h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="w-full h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'جاري...' : 'التالي'}
             </button>
+            </div>
           </div>
         </div>
       </div>
