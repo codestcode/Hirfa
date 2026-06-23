@@ -1,10 +1,11 @@
 'use client'
 
 import React from 'react'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Shield } from 'lucide-react'
 import { useMessages } from '@/hooks/useMessages'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { ConversationCard } from '@/components/ui/messages/ConversationCard'
+import Link from 'next/link'
 
 export default function MessagesPage() {
   const { conversations, loading } = useMessages()
@@ -17,6 +18,20 @@ export default function MessagesPage() {
         </div>
         <h1 className="text-xl font-bold">المحادثات</h1>
       </div>
+
+      {/* Admin Messages Link */}
+      <Link
+        href="/worker/messages/admin"
+        className="bg-gradient-to-r from-[#FF8A00]/10 to-[#FFB800]/10 rounded-2xl p-4 border border-[#FF8A00]/30 mb-6 flex items-center gap-3 hover:bg-[#FF8A00]/20 transition-colors"
+      >
+        <div className="w-10 h-10 rounded-full bg-[#FF8A00]/20 flex items-center justify-center text-[#FF8A00]">
+          <Shield size={18} />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-bold text-white">رسائل الإدارة</div>
+          <div className="text-[10px] text-[#6B7A99]">الرسائل من فريق الدعم</div>
+        </div>
+      </Link>
 
       <div className="flex flex-col gap-3">
         {loading ? <PageLoader /> : conversations.length ? conversations.map((conv) => (

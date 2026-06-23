@@ -19,20 +19,24 @@ export function useGallery() {
       })
   }, [user, supabase])
 
-  const handleUploadClick = async () => {
+  const uploadNewWork = async (title: string, beforeUrl: string, afterUrl: string) => {
     if (!user) return
     setIsUploading(true)
-    setTimeout(async () => {
-      const { data } = await supabase.from('worker_gallery').insert([{
+    try {
+      const { data, error } = await supabase.from('worker_gallery').insert([{
         worker_id: user.id,
-        before_url: 'https://images.unsplash.com/photo-1534398079543-7ae6d016b86a?w=500&h=500&fit=crop&grayscale=1',
-        after_url: 'https://images.unsplash.com/photo-1534398079543-7ae6d016b86a?w=500&h=500&fit=crop',
-        title: 'عمل جديد (قبل وبعد)'
+        before_url: beforeUrl,
+        after_url: afterUrl,
+        title: title || 'عمل جديد'
       }]).select().single()
       
+      if (error) throw error
       if (data) setImages([{ id: data.id, beforeUrl: data.before_url, afterUrl: data.after_url, title: data.title }, ...images])
+    } catch (e) {
+      console.error(e)
+    } finally {
       setIsUploading(false)
-    }, 1500)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -40,5 +44,5 @@ export function useGallery() {
     await supabase.from('worker_gallery').delete().eq('id', id)
   }
 
-  return { images, isUploading, fetching, handleUploadClick, handleDelete }
+  return { images, isUploading, fetching, uploadNewWork, handleDelete }
 }

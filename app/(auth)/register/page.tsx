@@ -51,6 +51,8 @@ function RegisterPageContent() {
     name.trim() !== '' &&
     email.trim() !== '' &&
     email.includes('@') &&
+    phone.trim() !== '' &&
+    avatar !== null &&
     (!isClient || (governorate !== '' && area !== '')) &&
     password.length >= 8 &&
     password === confirmPassword
@@ -67,7 +69,20 @@ function RegisterPageContent() {
   }
 
   const handleRegister = async () => {
-    if (!isFormValid) return
+    if (!isFormValid) {
+      const missing = []
+      if (!avatar) missing.push('الصورة الشخصية')
+      if (!name.trim()) missing.push('الاسم الكامل')
+      if (!email.trim() || !email.includes('@')) missing.push('البريد الإلكتروني صالح')
+      if (!phone.trim()) missing.push('رقم الهاتف')
+      if (isClient && !governorate) missing.push('المحافظة')
+      if (isClient && !area) missing.push('المنطقة')
+      if (password.length < 8) missing.push('كلمة مرور 8 أحرف')
+      else if (password !== confirmPassword) missing.push('تأكيد كلمة المرور')
+      
+      setError('يرجى إكمال البيانات التالية: ' + missing.join('، '))
+      return
+    }
     setIsLoading(true)
     setError('')
 
@@ -82,6 +97,7 @@ function RegisterPageContent() {
       }
 
       localStorage.setItem('signup_last', Date.now().toString())
+      if (avatar) localStorage.setItem('pendingAvatar', avatar)
       setIsLoading(true)
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -95,8 +111,7 @@ function RegisterPageContent() {
             phone: phone || null,
             role,
             governorate: governorate || null,
-            area: area || null,
-            avatar_url: avatar || null
+            area: area || null
           }
         })
       })
@@ -111,6 +126,7 @@ function RegisterPageContent() {
         setIsLoading(false)
         return
       }
+      
       router.push(`/otp?email=${encodeURIComponent(email)}&role=${role}`)
     } else {
       localStorage.setItem('pendingEmail', email)
@@ -121,7 +137,7 @@ function RegisterPageContent() {
       if (governorate) localStorage.setItem('pendingGovernorate', governorate)
       if (area) localStorage.setItem('pendingArea', area)
       if (avatar) localStorage.setItem('pendingAvatar', avatar)
-
+      
       router.push(`/register/details?email=${encodeURIComponent(email)}`)
     }
   }
@@ -159,7 +175,7 @@ function RegisterPageContent() {
             {isClient ? 'إنشاء حساب عميل' : 'إنشاء حساب حرفي'}
           </h1>
           <p className="text-xs text-[#6B7A99]">
-            {avatar ? 'تم اختيار الصورة، أكمل بياناتك' : 'اضغط على الدائرة لاختيار صورة شخصية (اختياري)'}
+            {avatar ? 'تم اختيار الصورة، أكمل بياناتك' : 'اضغط على الدائرة لاختيار صورة شخصية (إجباري)'}
           </p>
         </div>
 
@@ -185,7 +201,7 @@ function RegisterPageContent() {
           <div dir="ltr">
             <AuthInput
               type="tel"
-              placeholder="رقم الهاتف (اختياري)"
+              placeholder="رقم الهاتف"
               value={phone}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
               rightIcon={User}
@@ -293,7 +309,7 @@ function RegisterPageContent() {
 
           <button
             onClick={handleRegister}
-            disabled={isLoading || !isFormValid}
+            disabled={isLoading}
             className="w-full h-12 text-sm font-bold text-white bg-gradient-to-r from-[#FF8A00] to-[#FFB800] rounded-xl flex items-center justify-center transition-opacity active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
             {isLoading ? 'جاري...' : isClient ? 'إنشاء الحساب' : 'التالي'}

@@ -46,8 +46,53 @@ function OTPPageContent() {
       return
     }
 
-    if (role === 'craftsman') {
-      router.push('/worker/home')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const pendingAvatar = localStorage.getItem('pendingAvatar')
+      const pendingIdFront = localStorage.getItem('pendingIdFront')
+      const pendingIdBack = localStorage.getItem('pendingIdBack')
+      const pendingPortfolio = localStorage.getItem('pendingPortfolio')
+
+      const updates: any = {}
+      if (pendingAvatar) updates.avatar_url = pendingAvatar
+      if (pendingIdFront) updates.id_front_url = pendingIdFront
+      if (pendingIdBack) updates.id_back_url = pendingIdBack
+      if (pendingPortfolio) {
+        try {
+          updates.portfolio_urls = JSON.parse(pendingPortfolio)
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('profiles').update(updates).eq('id', user.id)
+        localStorage.removeItem('pendingAvatar')
+        localStorage.removeItem('pendingIdFront')
+        localStorage.removeItem('pendingIdBack')
+        localStorage.removeItem('pendingPortfolio')
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, profession')
+        .eq('id', user.id)
+        .maybeSingle()
+      
+      const userRole = profile?.role
+      const userProfession = profile?.profession
+
+      if (userRole === 'admin') {
+        if (userProfession) {
+          router.push('/worker/home')
+        } else {
+          router.push('/client/home')
+        }
+      } else if (userRole === 'worker') {
+        router.push('/worker/home')
+      } else {
+        router.push('/client/home')
+      }
     } else {
       router.push('/client/home')
     }
