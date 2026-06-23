@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient as createServerSupabase } from '@supabase/ssr'
+import { createServerClient as createServerSupabase } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
