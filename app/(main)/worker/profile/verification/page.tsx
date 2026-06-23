@@ -10,7 +10,7 @@ import { SaveButton } from '@/components/ui/forms/SaveButton'
 import { useVerification } from '@/hooks/useVerification'
 
 export default function VerificationPage() {
-  const { frontImage, setFrontImage, backImage, setBackImage, selfieImage, setSelfieImage, loading, fetching, status, handleImage, handleSubmit } = useVerification()
+  const { frontImage, setFrontImage, backImage, setBackImage, selfieImage, setSelfieImage, loading, fetching, status, rejectionReason, handleImage, handleSubmit } = useVerification()
 
   return (
     <SubPageLayout>
@@ -22,13 +22,21 @@ export default function VerificationPage() {
               {status === 'verified' ? <CheckCircle2 className="text-[#4ADE80]" /> : status === 'pending' ? <AlertCircle className="text-[#FFB800]" /> : <ShieldAlert className="text-[#EF4444]" />}
               <div>
                 <h3 className={`font-bold mb-1 ${status === 'verified' ? 'text-[#4ADE80]' : status === 'pending' ? 'text-[#FFB800]' : 'text-[#EF4444]'}`}>
-                  {status === 'verified' ? 'حساب موثق' : status === 'pending' ? 'جاري المراجعة' : 'حساب غير موثق'}
+                  {status === 'verified' ? 'حساب موثق' : status === 'pending' ? 'جاري المراجعة' : status === 'rejected' ? 'تم رفض التوثيق' : 'حساب غير موثق'}
                 </h3>
-                <p className="text-xs text-white/70 leading-relaxed">{status === 'verified' ? 'تمت المراجعة بنجاح.' : status === 'pending' ? 'جاري المراجعة وسيتم إشعارك قريباً.' : 'الرجاء رفع المستندات المطلوبة.'}</p>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {status === 'verified' ? 'تمت المراجعة بنجاح.' : status === 'pending' ? 'جاري المراجعة وسيتم إشعارك قريباً.' : status === 'rejected' ? 'تم رفض طلب التوثيق الخاص بك.' : 'الرجاء رفع المستندات المطلوبة.'}
+                </p>
+                {status === 'rejected' && rejectionReason && (
+                  <div className="mt-3 p-3 bg-black/20 rounded-xl border border-white/5 text-xs text-white/90">
+                    <strong className="text-[#EF4444] block mb-1">سبب الرفض:</strong>
+                    {rejectionReason}
+                  </div>
+                )}
               </div>
             </div>
 
-            {status === 'unverified' && (
+            {(status === 'unverified' || status === 'rejected') && (
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
                   <h3 className="text-sm font-bold border-b border-white/5 pb-2">بطاقة الهوية</h3>

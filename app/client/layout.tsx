@@ -14,7 +14,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!loading) {
       const role = profile?.role || user?.user_metadata?.role
-      if (role === 'client') {
+      if (role !== 'client' && role !== 'admin') {
         router.replace('/login')
       }
     }

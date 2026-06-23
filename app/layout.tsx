@@ -58,7 +58,7 @@ export default function RootLayout({
       dir="rtl"
       className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} ${plusJakarta.variable}`}
     >
-      <body className="font-sans antialiased" style={{ backgroundColor: "rgb(0, 4, 25)", color: "rgba(179, 197, 255, 0.8)" }}>
+      <body suppressHydrationWarning className="font-sans antialiased" style={{ backgroundColor: "rgb(0, 4, 25)", color: "rgba(179, 197, 255, 0.8)" }}>
         <QueryProvider>
           <AuthProvider>
             {children}

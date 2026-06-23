@@ -31,7 +31,7 @@ export default function ProfilePage() {
       items: [
         { title: 'تعديل الملف الشخصي', href: '/worker/profile/edit', icon: Pencil, color: '#FF8A00', bg: '#1E1B15' },
         { title: 'معرض الأعمال', href: '/worker/profile/gallery', icon: ImageIcon, color: '#FFB800', bg: '#1A1813' },
-        { title: 'التوثيق والهوية', href: '/worker/profile/verification', icon: Fingerprint, color: '#FFB800', bg: '#1A1813' }
+        ...(profile?.verification_status !== 'verified' && !profile?.verified ? [{ title: 'التوثيق والهوية', href: '/worker/profile/verification', icon: Fingerprint, color: '#FFB800', bg: '#1A1813' }] : [])
       ]
     },
     {

@@ -13,7 +13,7 @@ export default function RoleSelectionPage() {
       <ToolSilhouettes />
 
       <section className="relative z-10 flex-1 flex flex-col items-center pt-[35px] px-4">
-        <div className="w-full flex items-center justify-between">
+        <div className="w-full flex items-center justify-center">
           <Image
             src="/hirfa_logo.svg"
             alt="Hirfa"
@@ -21,12 +21,6 @@ export default function RoleSelectionPage() {
             height={53}
             className="w-[67px] h-[53px]"
           />
-          <button
-            onClick={() => router.push('/login')}
-            className="text-[#C5C6D0] text-center font-[family-name:var(--font-arabic)] text-base font-semibold leading-10 tracking-[-0.64px]"
-          >
-            تخطي
-          </button>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center w-full gap-8">

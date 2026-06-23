@@ -12,7 +12,7 @@ import { FormInput } from '@/components/ui/forms/FormInput'
 
 export default function EditProfilePage() {
   const router = useRouter()
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const supabase = createClient()
   
   const [name, setName] = useState('')
@@ -60,6 +60,7 @@ export default function EditProfilePage() {
       avatar_url: avatarPreview
     }).eq('id', profile.id)
 
+    await refreshProfile()
     setLoading(false)
     router.push('/worker/profile')
     router.refresh()

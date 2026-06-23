@@ -16,11 +16,14 @@ export async function GET(request: Request) {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, profession, phone')
         .eq('id', user.id)
         .maybeSingle()
 
+      let redirectPath = '/client/home'
+      let needsCompletion = false
       let finalRole = role
+      let finalProfession = null
 
       if (!profile) {
         const name = user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم جديد'
@@ -29,12 +32,24 @@ export async function GET(request: Request) {
           full_name: name,
           email: user.email,
           role: role,
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         })
+        needsCompletion = true
       } else {
         finalRole = profile.role || role
+        finalProfession = profile.profession
+        if (!profile.phone || (finalRole === 'worker' && !finalProfession)) {
+          needsCompletion = true
+        }
       }
 
-      const redirectPath = finalRole === 'worker' ? '/worker/home' : '/client/home'
+      if (needsCompletion) {
+        redirectPath = `/register/complete?role=${finalRole}`
+      } else if (finalRole === 'admin') {
+        redirectPath = finalProfession ? '/worker/home' : '/client/home'
+      } else if (finalRole === 'worker') {
+        redirectPath = '/worker/home'
+      }
       return NextResponse.redirect(`${origin}${redirectPath}`)
     }
   }
