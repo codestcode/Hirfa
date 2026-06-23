@@ -25,7 +25,7 @@ export function useProfileSummary() {
 
     const [servicesRes, reviewsRes] = await Promise.all([
       supabase.from('worker_services').select('*').eq('worker_id', profile.id),
-      supabase.from('worker_reviews').select('*').eq('worker_id', profile.id).order('created_at', { ascending: false }).limit(3)
+      supabase.from('reviews').select('*, client:client_id(full_name)').eq('craftsman_id', profile.id).order('created_at', { ascending: false }).limit(3)
     ])
 
     if (servicesRes.data) {
@@ -33,7 +33,7 @@ export function useProfileSummary() {
     }
 
     if (reviewsRes.data) {
-      setReviews(reviewsRes.data.map(r => ({ id: r.id, name: r.client_name || 'عميل', rating: r.rating, comment: r.comment })))
+      setReviews(reviewsRes.data.map(r => ({ id: r.id, name: r.client?.full_name || 'عميل', rating: r.rating, comment: r.text })))
     }
 
     setLoading(false)

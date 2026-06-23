@@ -10,14 +10,14 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 
-type TabType = 'overview' | 'users' | 'activations' | 'bookings' | 'emergencies' | 'categories' | 'rules' | 'messages'
+type TabType = 'overview' | 'users' | 'activations' | 'bookings' | 'emergencies' | 'categories' | 'rules' | 'messages' | 'services' | 'reviews' | 'transactions' | 'gallery' | 'notifications'
 
 export default function AdminDashboard() {
   const router = useRouter()
   const supabase = createClient()
   const { profile } = useAuth()
   
-  const [activeTab, setActiveTab] = useState<'users' | 'requests' | 'categories' | 'skills' | 'reports' | 'messages' | 'admin-rules'>('users')
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [loading, setLoading] = useState(true)
   
   const [stats, setStats] = useState({
@@ -32,12 +32,19 @@ export default function AdminDashboard() {
   const [emergenciesList, setEmergenciesList] = useState<any[]>([])
   const [categoriesList, setCategoriesList] = useState<any[]>([])
   const [rulesList, setRulesList] = useState<any[]>([])
+  const [servicesList, setServicesList] = useState<any[]>([])
+  const [reviewsList, setReviewsList] = useState<any[]>([])
+  const [transactionsList, setTransactionsList] = useState<any[]>([])
+  const [galleryList, setGalleryList] = useState<any[]>([])
+  const [notificationsList, setNotificationsList] = useState<any[]>([])
   
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | 'client' | 'worker' | 'admin'>('all')
   
   const [newCatAr, setNewCatAr] = useState('')
   const [newCatEn, setNewCatEn] = useState('')
+  const [newCatIcon, setNewCatIcon] = useState('')
+  const [newRulePattern, setNewRulePattern] = useState('')
   const [editingSkill, setEditingSkill] = useState<{ id: string; name: string } | null>(null)
   const [newAdminEmail, setNewAdminEmail] = useState('')
   
@@ -50,6 +57,11 @@ export default function AdminDashboard() {
   const [isEditingUser, setIsEditingUser] = useState(false)
   const [messageText, setMessageText] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
+  const [notifTitle, setNotifTitle] = useState('')
+  const [notifBody, setNotifBody] = useState('')
+  const [sendingNotif, setSendingNotif] = useState(false)
+  const [editingService, setEditingService] = useState<any>(null)
+  const [savingService, setSavingService] = useState(false)
   
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -65,7 +77,7 @@ export default function AdminDashboard() {
         .select(`
           *,
           client:client_id(full_name, phone),
-          craftsman:craftsman_id(full_name, phone)
+          worker:worker_id(full_name, phone)
         `)
         .order('created_at', { ascending: false })
       if (bErr) throw bErr
@@ -75,7 +87,7 @@ export default function AdminDashboard() {
         .select(`
           *,
           client:client_id(full_name, phone),
-          craftsman:assigned_craftsman_id(full_name)
+          worker:assigned_craftsman_id(full_name)
         `)
         .order('created_at', { ascending: false })
       if (eErr) throw eErr
@@ -92,11 +104,41 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
       if (rErr) throw rErr
 
+      const { data: services } = await supabase
+        .from('services')
+        .select('*, worker:craftsman_id(full_name, phone)')
+        .order('created_at', { ascending: false })
+
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('*, client:client_id(full_name), worker:craftsman_id(full_name)')
+        .order('created_at', { ascending: false })
+
+      const { data: transactions } = await supabase
+        .from('transactions')
+        .select('*, user:user_id(full_name, email)')
+        .order('created_at', { ascending: false })
+
+      const { data: gallery } = await supabase
+        .from('worker_gallery')
+        .select('*, worker:worker_id(full_name)')
+        .order('created_at', { ascending: false })
+
+      const { data: notifications } = await supabase
+        .from('notifications')
+        .select('*, user:user_id(full_name)')
+        .order('created_at', { ascending: false })
+
       setProfilesList(profiles || [])
       setBookingsList(bookings || [])
       setEmergenciesList(emergencies || [])
       setCategoriesList(categories || [])
       setRulesList(rules || [])
+      setServicesList(services || [])
+      setReviewsList(reviews || [])
+      setTransactionsList(transactions || [])
+      setGalleryList(gallery || [])
+      setNotificationsList(notifications || [])
 
       const clients = profiles?.filter(p => p.role === 'client') || []
       const workers = profiles?.filter(p => p.role === 'worker') || []
@@ -262,6 +304,35 @@ export default function AdminDashboard() {
     }
   }
 
+  const addRule = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newRulePattern.trim()) return
+    try {
+      const { error } = await supabase
+        .from('admin_rules')
+        .insert({ pattern: newRulePattern.trim() })
+      if (error) throw error
+      setNewRulePattern('')
+      fetchData()
+    } catch (err) {
+      alert('فشل إضافة القاعدة')
+    }
+  }
+
+  const deleteRule = async (id: string) => {
+    if (!confirm('هل تريد حذف هذه القاعدة؟')) return
+    try {
+      const { error } = await supabase
+        .from('admin_rules')
+        .delete()
+        .eq('id', id)
+      if (error) throw error
+      fetchData()
+    } catch (err) {
+      alert('فشل حذف القاعدة')
+    }
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setRejectionReason('')
@@ -281,8 +352,13 @@ export default function AdminDashboard() {
     { id: 'activations' as TabType, label: 'تفعيل الحسابات', icon: UserCheck },
     { id: 'users' as TabType, label: 'إدارة المستخدمين', icon: Users },
     { id: 'bookings' as TabType, label: 'إدارة الحجوزات', icon: DollarSign },
+    { id: 'services' as TabType, label: 'الخدمات', icon: Award },
     { id: 'emergencies' as TabType, label: 'بلاغات الطوارئ', icon: AlertCircle },
     { id: 'categories' as TabType, label: 'أقسام المنصة', icon: LayoutGrid },
+    { id: 'reviews' as TabType, label: 'التقييمات', icon: Award },
+    { id: 'transactions' as TabType, label: 'المعاملات المالية', icon: DollarSign },
+    { id: 'gallery' as TabType, label: 'معرض الأعمال', icon: MapPin },
+    { id: 'notifications' as TabType, label: 'الإشعارات', icon: Send },
     { id: 'rules' as TabType, label: 'صلاحيات الأدمن', icon: ShieldCheck },
     { id: 'messages' as TabType, label: 'إرسال رسائل', icon: MessageSquare }
   ]
@@ -469,7 +545,7 @@ export default function AdminDashboard() {
                                 <td style={{ padding: 16 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                     <button 
-                                      onClick={() => toggleVerification(p.id, false)}
+                                      onClick={() => verifyUser(p.id)}
                                       style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.1)', background: 'rgba(20,83,45,0.2)', color: '#22c55e', cursor: 'pointer', display: 'flex', gap: 4, alignItems: 'center' }}
                                     >
                                       <CheckCircle size={14} /> تفعيل
@@ -672,8 +748,8 @@ export default function AdminDashboard() {
                                   <div style={{ fontSize: 10, color: '#6b7280' }}>{b.client?.phone || '-'}</div>
                                 </td>
                                 <td style={{ padding: 16 }}>
-                                  <div style={{ fontWeight: 600 }}>{b.craftsman?.full_name || 'حرفي'}</div>
-                                  <div style={{ fontSize: 10, color: '#6b7280' }}>{b.craftsman?.phone || '-'}</div>
+                                  <div style={{ fontWeight: 600 }}>{b.worker?.full_name || 'حرفي'}</div>
+                                  <div style={{ fontSize: 10, color: '#6b7280' }}>{b.worker?.phone || '-'}</div>
                                 </td>
                                 <td style={{ padding: 16 }}>
                                   <div>{b.appointment_date}</div>
@@ -739,7 +815,7 @@ export default function AdminDashboard() {
                                   <div style={{ fontSize: 10, color: '#6b7280' }}>{e.client?.phone || '-'}</div>
                                 </td>
                                 <td style={{ padding: 16, color: '#d1d5db' }}>
-                                  {e.craftsman?.full_name || <span style={{ color: '#6b7280' }}>جاري البحث عن حرفي...</span>}
+                                  {e.worker?.full_name || <span style={{ color: '#6b7280' }}>جاري البحث عن حرفي...</span>}
                                 </td>
                                 <td style={{ padding: 16, color: '#9ca3af' }}>{e.address}</td>
                                 <td style={{ padding: 16 }}>
@@ -757,6 +833,53 @@ export default function AdminDashboard() {
                               </tr>
                             )
                           })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== SERVICES TAB ===== */}
+              {activeTab === 'services' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0E1224', color: '#9ca3af', fontWeight: 700 }}>
+                            <th style={{ padding: 16 }}>اسم الخدمة</th>
+                            <th style={{ padding: 16 }}>السعر</th>
+                            <th style={{ padding: 16 }}>الحرفي</th>
+                            <th style={{ padding: 16, textAlign: 'center' }}>العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {servicesList.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد خدمات مسجلة</td>
+                            </tr>
+                          ) : servicesList.map((s) => (
+                            <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: 16, fontWeight: 700, color: '#fff' }}>{s.name}</td>
+                              <td style={{ padding: 16, fontWeight: 700, color: '#FF8A00' }}>{s.price} ج.م</td>
+                              <td style={{ padding: 16 }}>{s.worker?.full_name || 'حرفي'}</td>
+                              <td style={{ padding: 16 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                  <button onClick={() => setEditingService(s)} style={{ padding: 6, borderRadius: 8, border: '1px solid rgba(59,130,246,0.1)', background: 'rgba(30,58,138,0.2)', color: '#60a5fa', cursor: 'pointer' }}>
+                                    <Edit size={14} />
+                                  </button>
+                                  <button onClick={async () => {
+                                    if (!confirm('حذف هذه الخدمة؟')) return
+                                    await supabase.from('services').delete().eq('id', s.id)
+                                    fetchData()
+                                  }} style={{ padding: 6, borderRadius: 8, border: '1px solid rgba(239,68,68,0.1)', background: 'rgba(127,29,29,0.2)', color: '#ef4444', cursor: 'pointer' }}>
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -828,6 +951,262 @@ export default function AdminDashboard() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== REVIEWS TAB ===== */}
+              {activeTab === 'reviews' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0E1224', color: '#9ca3af', fontWeight: 700 }}>
+                            <th style={{ padding: 16 }}>العميل</th>
+                            <th style={{ padding: 16 }}>الحرفي</th>
+                            <th style={{ padding: 16 }}>التقييم</th>
+                            <th style={{ padding: 16 }}>التعليق</th>
+                            <th style={{ padding: 16 }}>التاريخ</th>
+                            <th style={{ padding: 16, textAlign: 'center' }}>حذف</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reviewsList.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد تقييمات</td>
+                            </tr>
+                          ) : reviewsList.map((r) => (
+                            <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: 16, fontWeight: 600, color: '#fff' }}>{r.client?.full_name || 'عميل'}</td>
+                              <td style={{ padding: 16 }}>{r.worker?.full_name || 'حرفي'}</td>
+                              <td style={{ padding: 16 }}>
+                                <span style={{ color: '#FFB800', fontWeight: 700 }}>{'★'.repeat(Math.round(r.rating || 0))}{'☆'.repeat(5 - Math.round(r.rating || 0))}</span>
+                              </td>
+                              <td style={{ padding: 16, color: '#d1d5db', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.text || '-'}</td>
+                              <td style={{ padding: 16, color: '#6b7280' }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('ar-EG') : '-'}</td>
+                              <td style={{ padding: 16 }}>
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                  <button onClick={async () => {
+                                    if (!confirm('حذف هذا التقييم؟')) return
+                                    await supabase.from('reviews').delete().eq('id', r.id)
+                                    fetchData()
+                                  }} style={{ padding: 6, borderRadius: 8, border: '1px solid rgba(239,68,68,0.1)', background: 'rgba(127,29,29,0.2)', color: '#ef4444', cursor: 'pointer' }}>
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== TRANSACTIONS TAB ===== */}
+              {activeTab === 'transactions' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', padding: 24 }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#FF8A00' }}>إجمالي المعاملات المالية</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 24 }}>
+                      <div style={{ background: '#050814', padding: 16, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>إجمالي الودائع</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: '#22c55e', marginTop: 4 }}>
+                          {transactionsList.filter(t => t.type === 'deposit').reduce((a, t) => a + Number(t.amount || 0), 0)} ج.م
+                        </div>
+                      </div>
+                      <div style={{ background: '#050814', padding: 16, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>إجمالي المدفوعات</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: '#ef4444', marginTop: 4 }}>
+                          {transactionsList.filter(t => t.type === 'payment').reduce((a, t) => a + Number(t.amount || 0), 0)} ج.م
+                        </div>
+                      </div>
+                      <div style={{ background: '#050814', padding: 16, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>إجمالي المستردات</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: '#facc15', marginTop: 4 }}>
+                          {transactionsList.filter(t => t.type === 'refund').reduce((a, t) => a + Number(t.amount || 0), 0)} ج.م
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0E1224', color: '#9ca3af', fontWeight: 700 }}>
+                            <th style={{ padding: 16 }}>المستخدم</th>
+                            <th style={{ padding: 16 }}>النوع</th>
+                            <th style={{ padding: 16 }}>المبلغ</th>
+                            <th style={{ padding: 16 }}>الوصف</th>
+                            <th style={{ padding: 16 }}>التاريخ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {transactionsList.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد معاملات مالية</td>
+                            </tr>
+                          ) : transactionsList.map((t) => (
+                            <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: 16, fontWeight: 600, color: '#fff' }}>{t.user?.full_name || 'مستخدم'}</td>
+                              <td style={{ padding: 16 }}>
+                                <span style={{
+                                  padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700,
+                                  background: t.type === 'deposit' ? 'rgba(34,197,94,0.1)' : t.type === 'payment' ? 'rgba(239,68,68,0.1)' : 'rgba(234,179,8,0.1)',
+                                  color: t.type === 'deposit' ? '#22c55e' : t.type === 'payment' ? '#ef4444' : '#facc15'
+                                }}>
+                                  {t.type === 'deposit' ? 'إيداع' : t.type === 'payment' ? 'دفع' : 'استرداد'}
+                                </span>
+                              </td>
+                              <td style={{ padding: 16, fontWeight: 700, color: t.type === 'deposit' ? '#22c55e' : '#ef4444' }}>{t.amount} ج.م</td>
+                              <td style={{ padding: 16, color: '#d1d5db' }}>{t.description || '-'}</td>
+                              <td style={{ padding: 16, color: '#6b7280' }}>{t.created_at ? new Date(t.created_at).toLocaleDateString('ar-EG') : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== GALLERY TAB ===== */}
+              {activeTab === 'gallery' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0E1224', color: '#9ca3af', fontWeight: 700 }}>
+                            <th style={{ padding: 16 }}>الصورة</th>
+                            <th style={{ padding: 16 }}>العنوان</th>
+                            <th style={{ padding: 16 }}>الحرفي</th>
+                            <th style={{ padding: 16, textAlign: 'center' }}>حذف</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {galleryList.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد صور في المعرض</td>
+                            </tr>
+                          ) : galleryList.map((g) => (
+                            <tr key={g.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: 16 }}>
+                                <img src={g.image_url} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                              </td>
+                              <td style={{ padding: 16, color: '#fff', fontWeight: 600 }}>{g.title || 'بدون عنوان'}</td>
+                              <td style={{ padding: 16 }}>{g.worker?.full_name || 'حرفي'}</td>
+                              <td style={{ padding: 16 }}>
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                  <button onClick={async () => {
+                                    if (!confirm('حذف هذه الصورة؟')) return
+                                    await supabase.from('worker_gallery').delete().eq('id', g.id)
+                                    fetchData()
+                                  }} style={{ padding: 6, borderRadius: 8, border: '1px solid rgba(239,68,68,0.1)', background: 'rgba(127,29,29,0.2)', color: '#ef4444', cursor: 'pointer' }}>
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== NOTIFICATIONS TAB ===== */}
+              {activeTab === 'notifications' && (
+                <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+                  <div className="w-full md:w-[320px] flex-shrink-0" style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Send size={16} style={{ color: '#FF8A00' }} />
+                      <span>إرسال إشعار عام</span>
+                    </h3>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault()
+                      if (!notifTitle.trim() || !notifBody.trim()) return
+                      setSendingNotif(true)
+                      try {
+                        const { data: allUsers } = await supabase.from('profiles').select('id')
+                        if (allUsers) {
+                          const inserts = allUsers.map(u => ({
+                            user_id: u.id,
+                            title: notifTitle.trim(),
+                            body: notifBody.trim()
+                          }))
+                          const { error } = await supabase.from('notifications').insert(inserts)
+                          if (error) throw error
+                        }
+                        setNotifTitle('')
+                        setNotifBody('')
+                        fetchData()
+                        alert('تم إرسال الإشعار لجميع المستخدمين')
+                      } catch (err) {
+                        alert('فشل إرسال الإشعار')
+                      } finally {
+                        setSendingNotif(false)
+                      }
+                    }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 10, color: '#9ca3af', fontWeight: 700 }}>عنوان الإشعار</label>
+                        <input type="text" required value={notifTitle} onChange={e => setNotifTitle(e.target.value)}
+                          style={{ background: '#050814', fontSize: 12, borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(255,255,255,0.05)', outline: 'none', color: '#fff', fontFamily: 'inherit' }}
+                          placeholder="مثال: عروض حصرية" />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 10, color: '#9ca3af', fontWeight: 700 }}>نص الإشعار</label>
+                        <textarea required value={notifBody} onChange={e => setNotifBody(e.target.value)} rows={4}
+                          style={{ background: '#050814', fontSize: 12, borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(255,255,255,0.05)', outline: 'none', color: '#fff', fontFamily: 'inherit', resize: 'vertical' }}
+                          placeholder="اكتب محتوى الإشعار..." />
+                      </div>
+                      <button type="submit" disabled={sendingNotif}
+                        style={{ width: '100%', background: sendingNotif ? 'rgba(255,138,0,0.3)' : 'linear-gradient(90deg, #FF8A00, #FFB800)', color: '#000', fontWeight: 900, fontSize: 12, padding: '12px 0', borderRadius: 12, border: 'none', cursor: sendingNotif ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                        {sendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار للجميع'}
+                      </button>
+                    </form>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', alignSelf: 'flex-start' }}>
+                    <div style={{ padding: 16, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#FF8A00' }}>الإشعارات المرسلة</h3>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#0E1224', color: '#9ca3af', fontWeight: 700 }}>
+                            <th style={{ padding: 16 }}>العنوان</th>
+                            <th style={{ padding: 16 }}>المحتوى</th>
+                            <th style={{ padding: 16 }}>المستخدم</th>
+                            <th style={{ padding: 16 }}>مقروء</th>
+                            <th style={{ padding: 16 }}>التاريخ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {notificationsList.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد إشعارات</td>
+                            </tr>
+                          ) : notificationsList.map((n) => (
+                            <tr key={n.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: 16, fontWeight: 700, color: '#fff' }}>{n.title}</td>
+                              <td style={{ padding: 16, color: '#d1d5db', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.body}</td>
+                              <td style={{ padding: 16 }}>{n.user?.full_name || 'مستخدم'}</td>
+                              <td style={{ padding: 16 }}>
+                                <span style={{
+                                  padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700,
+                                  background: n.is_read ? 'rgba(34,197,94,0.1)' : 'rgba(234,179,8,0.1)',
+                                  color: n.is_read ? '#22c55e' : '#facc15'
+                                }}>
+                                  {n.is_read ? 'مقروء' : 'جديد'}
+                                </span>
+                              </td>
+                              <td style={{ padding: 16, color: '#6b7280' }}>{n.created_at ? new Date(n.created_at).toLocaleDateString('ar-EG') : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1131,6 +1510,51 @@ export default function AdminDashboard() {
                   {isRejecting ? 'جاري الرفض...' : 'تأكيد الرفض'}
                 </button>
                 <button type="button" onClick={() => setRejectUser(null)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: '#fff', padding: 12, borderRadius: 12, border: 'none', fontWeight: 700, cursor: 'pointer' }}>إلغاء</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {editingService && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setEditingService(null)}>
+          <div style={{ background: '#0A0D1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, width: '100%', maxWidth: 400, padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>تعديل الخدمة</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              setSavingService(true)
+              try {
+                const { error } = await supabase
+                  .from('services')
+                  .update({ name: editingService.name, price: editingService.price })
+                  .eq('id', editingService.id)
+                if (error) throw error
+                setEditingService(null)
+                fetchData()
+              } catch (err) {
+                alert('فشل تحديث الخدمة')
+              } finally {
+                setSavingService(false)
+              }
+            }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#9ca3af' }}>اسم الخدمة</label>
+                <input type="text" value={editingService.name || ''} onChange={e => setEditingService({...editingService, name: e.target.value})}
+                  style={{ background: '#050814', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, color: '#fff', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 12, color: '#9ca3af' }}>السعر (ج.م)</label>
+                <input type="number" value={editingService.price || 0} onChange={e => setEditingService({...editingService, price: parseFloat(e.target.value)})}
+                  style={{ background: '#050814', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, color: '#fff', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="submit" disabled={savingService}
+                  style={{ flex: 1, background: 'linear-gradient(90deg, #FF8A00, #FFB800)', color: '#000', padding: 12, borderRadius: 12, border: 'none', fontWeight: 900, cursor: savingService ? 'not-allowed' : 'pointer', opacity: savingService ? 0.7 : 1 }}>
+                  {savingService ? 'جاري الحفظ...' : 'حفظ'}
+                </button>
+                <button type="button" onClick={() => setEditingService(null)}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: '#fff', padding: 12, borderRadius: 12, border: 'none', fontWeight: 700, cursor: 'pointer' }}>إلغاء</button>
               </div>
             </form>
           </div>

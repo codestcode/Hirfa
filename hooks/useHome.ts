@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
+import { createNotification } from '@/lib/notifications'
 
 export function useHome() {
   const { profile, user } = useAuth()
@@ -32,7 +33,22 @@ export function useHome() {
   }
 
   const handleRequest = async (id: string, status: string) => {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('client_id')
+      .eq('id', id)
+      .single()
+
     await supabase.from('bookings').update({ status }).eq('id', id)
+
+    if (booking) {
+      if (status === 'confirmed') {
+        createNotification(booking.client_id, 'قام الحرفي بقبول الخدمة', `تم قبول طلب الخدمة بواسطة ${profile?.full_name || 'الحرفي'}`)
+      } else if (status === 'cancelled') {
+        createNotification(booking.client_id, 'تم رفض طلب الخدمة', 'نأسف، تم رفض طلب الخدمة الخاص بك')
+      }
+    }
+
     fetchBookings()
   }
 

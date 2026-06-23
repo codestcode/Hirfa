@@ -1,153 +1,188 @@
--- HIRFA AUTH SCHEMA
+-- ════════════════════════════════════════════
+-- HIRFA — Migration: add missing tables & columns
+-- Safe to run multiple times (idempotent)
+-- ════════════════════════════════════════════
 
 -- ============================================
--- 1. PROFILES TABLE
+-- 1. Add missing columns to BOOKINGS
 -- ============================================
-CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('client', 'worker')),
-  full_name TEXT,
-  email TEXT,
-  phone TEXT,
-  avatar_url TEXT,
-  governorate TEXT,
-  area TEXT,
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'cash';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS is_emergency BOOLEAN DEFAULT false;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS emergency_type TEXT;
+
+-- ============================================
+-- 2. WORKER GALLERY TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.worker_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  worker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  image_url TEXT,
+  title TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.worker_gallery ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read worker gallery"
+  ON public.worker_gallery FOR SELECT
+  USING (true);
+
+CREATE POLICY "Workers can manage own gallery"
+  ON public.worker_gallery FOR ALL
+  USING (auth.uid() = worker_id);
+
+-- ============================================
+-- 3. NOTIFICATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT,
+  body TEXT,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own notifications"
+  ON public.notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert notifications"
+  ON public.notifications FOR INSERT
+  WITH CHECK (true);
+
+-- ============================================
+-- 4. CONVERSATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  worker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  client_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  last_message TEXT,
+  last_message_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Participants can read conversations"
+  ON public.conversations FOR SELECT
+  USING (auth.uid() = worker_id OR auth.uid() = client_id);
+
+-- ============================================
+-- 5. WALLET BALANCE on PROFILES
+-- ============================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS wallet_balance NUMERIC DEFAULT 0;
+
+-- ============================================
+-- 6. TRANSACTIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('deposit', 'payment', 'refund')),
+  amount NUMERIC NOT NULL,
+  description TEXT,
+  reference_type TEXT,
+  reference_id UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own transactions"
+  ON public.transactions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own transactions"
+  ON public.transactions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- ============================================
+-- 7. SAVED CARDS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.saved_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  last_four TEXT NOT NULL,
+  card_holder TEXT NOT NULL,
+  brand TEXT NOT NULL DEFAULT 'visa',
+  expiry_date TEXT NOT NULL,
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.saved_cards ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own saved cards"
+  ON public.saved_cards FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage own saved cards"
+  ON public.saved_cards FOR ALL
+  USING (auth.uid() = user_id);
+
+-- ============================================
+-- 8. REVIEWS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  craftsman_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  booking_id UUID NOT NULL REFERENCES public.bookings(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  text TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read reviews"
+  ON public.reviews FOR SELECT
+  USING (true);
+
+CREATE POLICY "Clients can insert own reviews"
+  ON public.reviews FOR INSERT
+  WITH CHECK (auth.uid() = client_id);
+
+CREATE POLICY "Admins can delete reviews"
+  ON public.reviews FOR DELETE
+  USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+
+-- ============================================
+-- 9. ADDRESSES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.addresses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL DEFAULT 'home' CHECK (type IN ('home', 'work', 'other')),
+  label TEXT,
+  city TEXT NOT NULL,
+  street TEXT NOT NULL,
+  building TEXT,
+  apartment TEXT,
+  notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_profiles_role ON public.profiles(role);
-CREATE INDEX idx_profiles_email ON public.profiles(email);
+ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
 
--- ============================================
--- 2. ENABLE ROW LEVEL SECURITY
--- ============================================
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own addresses"
+  ON public.addresses FOR SELECT
+  USING (auth.uid() = user_id);
 
--- ============================================
--- 3. RLS POLICIES
--- ============================================
+CREATE POLICY "Users can insert own addresses"
+  ON public.addresses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can read own profile"
-  ON public.profiles
-  FOR SELECT
-  USING (auth.uid() = id);
+CREATE POLICY "Users can update own addresses"
+  ON public.addresses FOR UPDATE
+  USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own profile"
-  ON public.profiles
-  FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON public.profiles
-  FOR UPDATE
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can delete own profile"
-  ON public.profiles
-  FOR DELETE
-  USING (auth.uid() = id);
-
--- ============================================
--- 4. PREVENT ROLE CHANGE TRIGGER
--- ============================================
-CREATE OR REPLACE FUNCTION public.prevent_role_change()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-  IF OLD.role IS NOT NULL AND NEW.role IS DISTINCT FROM OLD.role THEN
-    RAISE EXCEPTION 'Role cannot be changed after signup';
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER prevent_role_change
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION public.prevent_role_change();
-
--- ============================================
--- 5. AUTO-CREATE PROFILE AFTER SIGNUP
--- ============================================
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  INSERT INTO public.profiles (id, role, full_name, email, phone)
-  VALUES (
-    NEW.id,
-    NEW.raw_user_meta_data ->> 'role',
-    NEW.raw_user_meta_data ->> 'full_name',
-    NEW.email,
-    NEW.raw_user_meta_data ->> 'phone'
-  );
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-
--- ============================================
--- 6. AUTO-UPDATE updated_at TIMESTAMP
--- ============================================
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER update_profiles_updated_at
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
-
--- ============================================
--- 7. FIXES — run after schema is applied
--- ============================================
-
--- Add missing email column if profiles table was created without it
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
-
--- Recreate trigger with error handling so a failed profile insert
--- does not prevent the auth user from being created
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  INSERT INTO public.profiles (id, role, full_name, email, phone)
-  VALUES (
-    NEW.id,
-    NEW.raw_user_meta_data ->> 'role',
-    NEW.raw_user_meta_data ->> 'full_name',
-    NEW.email,
-    NEW.raw_user_meta_data ->> 'phone'
-  );
-  RETURN NEW;
-EXCEPTION WHEN OTHERS THEN
-  RAISE WARNING 'Profile creation failed for user %: %', NEW.id, SQLERRM;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
+CREATE POLICY "Users can delete own addresses"
+  ON public.addresses FOR DELETE
+  USING (auth.uid() = user_id);
