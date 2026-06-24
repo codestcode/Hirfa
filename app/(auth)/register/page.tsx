@@ -33,7 +33,6 @@ function RegisterPageContent() {
     setName(localStorage.getItem('pendingName') || '')
     setEmail(localStorage.getItem('pendingEmail') || '')
     setPhone(localStorage.getItem('pendingPhone') || '')
-    setPassword(localStorage.getItem('pendingPassword') || '')
     setGovernorate(localStorage.getItem('pendingGovernorate') || '')
     setArea(localStorage.getItem('pendingArea') || '')
     setAvatar(localStorage.getItem('pendingAvatar') || null)
@@ -130,7 +129,6 @@ function RegisterPageContent() {
       router.push(`/otp?email=${encodeURIComponent(email)}&role=${role}`)
     } else {
       localStorage.setItem('pendingEmail', email)
-      localStorage.setItem('pendingPassword', password)
       localStorage.setItem('pendingName', name)
       localStorage.setItem('pendingRole', role)
       if (phone) localStorage.setItem('pendingPhone', phone)
