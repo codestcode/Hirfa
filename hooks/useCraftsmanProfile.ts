@@ -15,11 +15,13 @@ export interface CraftsmanProfile {
   governorate: string | null
   area: string | null
   phone: string | null
+  address: string | null
 }
 
 export interface GalleryItem {
   id: string
-  image_url: string | null
+  before_url: string | null
+  after_url: string | null
   title: string | null
 }
 
@@ -48,13 +50,30 @@ export function useCraftsmanProfile(workerId: string) {
   const fetchProfile = useCallback(async () => {
     setLoading(true)
 
-    const [profRes, servRes] = await Promise.all([
+    const [profRes, servRes, galleryRes] = await Promise.all([
       supabase.from('profiles').select('id, full_name, avatar_url, profession, rating, completed_orders, is_available, verified, governorate, area, phone').eq('id', workerId).single(),
-      supabase.from('services').select('id, name, price').eq('craftsman_id', workerId).order('price', { ascending: true })
+      supabase.from('services').select('id, name, price').eq('craftsman_id', workerId).order('price', { ascending: true }),
+      supabase.from('worker_gallery').select('id, before_url, after_url, title').eq('worker_id', workerId).order('created_at', { ascending: false })
     ])
 
     if (profRes.data) {
       const p = profRes.data as any
+
+      const { data: addr } = await supabase
+        .from('addresses')
+        .select('city, street, building, apartment')
+        .eq('user_id', workerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      let fullAddress: string | null = null
+      if (addr) {
+        const parts = [addr.city, '، ', addr.street]
+        if (addr.building) parts.push('، مبنى ', addr.building)
+        if (addr.apartment) parts.push('، شقة ', addr.apartment)
+        fullAddress = parts.join('')
+      }
       setProfile({
         id: p.id,
         full_name: p.full_name,
@@ -66,11 +85,13 @@ export function useCraftsmanProfile(workerId: string) {
         verified: p.verified ?? false,
         governorate: p.governorate,
         area: p.area,
-        phone: p.phone
+        phone: p.phone,
+        address: fullAddress
       })
     }
 
     if (servRes.data) setServices(servRes.data)
+    if (galleryRes.data) setGallery(galleryRes.data)
 
     const { data: reviewsData } = await supabase
       .from('reviews')

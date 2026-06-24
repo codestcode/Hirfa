@@ -50,7 +50,8 @@ export default function AddNewAddressPage() {
 
     setSaving(false)
     if (error) {
-      alert('حدث خطأ أثناء الحفظ')
+      console.error('Address insert error:', error)
+      alert('خطأ: ' + error.message)
       return
     }
     router.push('/client/addresses')

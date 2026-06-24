@@ -2,13 +2,15 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowLeft, Heart, Share2, Star, MapPin, Shield } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, Heart, Share2, Star, MapPin, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCraftsmanProfile } from '@/hooks/useCraftsmanProfile'
 
 export default function CraftsmanPage() {
   const router = useRouter()
   const params = useParams()
   const { profile, gallery, reviews, loading } = useCraftsmanProfile(params.id as string)
+  const [modalIndex, setModalIndex] = useState<number | null>(null)
 
   if (loading) {
     return (
@@ -58,6 +60,13 @@ export default function CraftsmanPage() {
           <p className="text-[#C7C5CF] text-base mt-1">{profile.profession || 'حرفي'}</p>
         </div>
 
+        {profile.address && (
+          <div className="mt-6 flex items-center justify-center gap-2 text-[#C7C5CF] text-sm">
+            <MapPin size={16} className="text-[#FF8A00]" />
+            <span>{profile.address}</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-center gap-3 mt-6">
           <div className="flex-1 bg-[#0C1222] rounded-2xl py-4 text-center">
             <p className="text-white font-bold">5 سنوات</p>
@@ -75,14 +84,32 @@ export default function CraftsmanPage() {
 
         {gallery.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-white font-bold text-base mb-4">الاعمال السابقة</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {gallery.map(item => (
-                <div key={item.id} className="rounded-2xl overflow-hidden aspect-square bg-[#1E2538]">
-                  {item.image_url ? (
-                    <Image src={item.image_url} alt={item.title || ''} width={200} height={200} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#6B7A99] text-sm">صورة</div>
+            <h3 className="text-white font-bold text-base mb-4">معرض الأعمال</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {gallery.map((item, i) => (
+                <div key={item.id} onClick={() => setModalIndex(i)} className="bg-[#0C1222] rounded-2xl overflow-hidden border border-white/5 cursor-pointer active:scale-[0.98] transition-transform">
+                  <div className="grid grid-cols-2 gap-px bg-white/10">
+                    <div className="aspect-square bg-[#1E2538] relative">
+                      {item.before_url ? (
+                        <Image src={item.before_url} alt="قبل" width={200} height={200} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#6B7A99] text-xs">قبل</div>
+                      )}
+                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">قبل</span>
+                    </div>
+                    <div className="aspect-square bg-[#1E2538] relative">
+                      {item.after_url ? (
+                        <Image src={item.after_url} alt="بعد" width={200} height={200} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#6B7A99] text-xs">بعد</div>
+                      )}
+                      <span className="absolute bottom-1 right-1 bg-[#FF8A00]/80 text-white text-[10px] px-1.5 py-0.5 rounded">بعد</span>
+                    </div>
+                  </div>
+                  {item.title && (
+                    <div className="px-3 py-2">
+                      <p className="text-white/70 text-xs">{item.title}</p>
+                    </div>
                   )}
                 </div>
               ))}
@@ -110,13 +137,87 @@ export default function CraftsmanPage() {
           </div>
         )}
 
-        {profile.governorate && (
-          <div className="mt-8 flex items-center gap-2 text-[#C7C5CF] text-sm">
-            <MapPin size={16} />
-            <span>{profile.governorate}{profile.area ? ` - ${profile.area}` : ''}</span>
-          </div>
-        )}
       </div>
+
+      {modalIndex !== null && gallery[modalIndex] && (
+        <div 
+          onClick={() => setModalIndex(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="w-full flex flex-col"
+            style={{ backgroundColor: '#0A0D1A', borderRadius: 24, maxWidth: 440, border: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>
+                {gallery[modalIndex].title || 'معرض الأعمال'}
+              </span>
+              <button onClick={() => setModalIndex(null)} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
+              <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden" style={{ borderRadius: 16, overflow: 'hidden' }}>
+                <div className="aspect-square bg-[#1E2538] relative">
+                  {gallery[modalIndex].before_url ? (
+                    <Image src={gallery[modalIndex].before_url} alt="قبل" width={400} height={400} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#6B7A99] text-sm">قبل</div>
+                  )}
+                  <span className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">قبل</span>
+                </div>
+                <div className="aspect-square bg-[#1E2538] relative">
+                  {gallery[modalIndex].after_url ? (
+                    <Image src={gallery[modalIndex].after_url} alt="بعد" width={400} height={400} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#6B7A99] text-sm">بعد</div>
+                  )}
+                  <span className="absolute bottom-2 right-2 bg-[#FF8A00]/80 text-white text-xs px-2 py-1 rounded">بعد</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  disabled={modalIndex === 0}
+                  onClick={() => setModalIndex(modalIndex - 1)}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', cursor: modalIndex > 0 ? 'pointer' : 'not-allowed',
+                    backgroundColor: modalIndex > 0 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
+                    color: modalIndex > 0 ? 'white' : 'rgba(255,255,255,0.3)',
+                    fontSize: 14, fontWeight: 500
+                  }}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <ChevronRight size={16} />
+                    <span>السابق</span>
+                  </div>
+                </button>
+
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, whiteSpace: 'nowrap' }}>{modalIndex + 1} / {gallery.length}</span>
+
+                <button
+                  disabled={modalIndex === gallery.length - 1}
+                  onClick={() => setModalIndex(modalIndex + 1)}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', cursor: modalIndex < gallery.length - 1 ? 'pointer' : 'not-allowed',
+                    backgroundColor: modalIndex < gallery.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
+                    color: modalIndex < gallery.length - 1 ? 'white' : 'rgba(255,255,255,0.3)',
+                    fontSize: 14, fontWeight: 500
+                  }}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>التالي</span>
+                    <ChevronLeft size={16} />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="fixed bottom-28 left-0 right-0 bg-[#020617] backdrop-blur-lg border-t border-white/5 p-4">
         <div className="max-w-[512px] mx-auto">

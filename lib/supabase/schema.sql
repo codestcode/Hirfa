@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.worker_gallery (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   image_url TEXT,
+  before_url TEXT,
+  after_url TEXT,
   title TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

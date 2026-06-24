@@ -79,16 +79,27 @@ export default function EmergencyPage() {
     setCreating(true)
 
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { user }, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !user) {
+      console.error('Auth error:', userErr)
+      alert('يجب تسجيل الدخول أولاً')
+      setCreating(false)
+      return
+    }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, governorate, area, full_name')
-      .eq('id', user.id)
-      .single()
+    const { data: address } = await supabase
+      .from('addresses')
+      .select('city, street, building, apartment')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    const { data: booking } = await supabase
+    const fullAddress = address
+      ? `${address.city}، ${address.street}${address.building ? `، مبنى ${address.building}` : ''}${address.apartment ? `، شقة ${address.apartment}` : ''}`
+      : 'طلب طوارئ'
+
+    const { data: booking, error: bookErr } = await supabase
       .from('bookings')
       .insert({
         client_id: user.id,
@@ -100,21 +111,28 @@ export default function EmergencyPage() {
         emergency_type: selectedType.id,
         notes: 'طلب طوارئ فوري',
         payment_method: 'cash',
+        appointment_date: new Date().toISOString().split('T')[0],
+        appointment_time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        address: fullAddress,
       })
       .select('id')
       .single()
 
     setCreating(false)
-    if (booking) {
-      createNotification(user.id, 'تم إرسال طلب طوارئ', `طلب مساعدة عاجلة: ${selectedType.label}`)
-      const { data: worker } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', workerId)
-        .single()
-      createNotification(workerId, 'طلب طوارئ جديد', `طلب مساعدة عاجلة من ${profile?.full_name || 'عميل'}`)
-      router.push(`/client/order/success?id=${booking.id}`)
+    if (bookErr || !booking) {
+      console.error('Booking insert error:', bookErr)
+      alert('حدث خطأ: ' + (bookErr?.message || 'تعذر إنشاء الطلب'))
+      return
     }
+
+    createNotification(user.id, 'تم إرسال طلب طوارئ', `طلب مساعدة عاجلة: ${selectedType.label}`)
+    const { data: worker } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', workerId)
+      .single()
+    createNotification(workerId, 'طلب طوارئ جديد', `طلب مساعدة عاجلة من ${user.email || 'عميل'}`)
+    router.push(`/client/order/success?id=${booking.id}`)
   }
 
   return (

@@ -1253,7 +1253,7 @@ export default function AdminDashboard() {
                             </td>
                             <td style={{ padding: 16 }}>
                               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                {r.pattern !== 'unshreif@gmail.com' ? (
+                                {r.pattern !== 'unshreif@gmail.com' && r.pattern !== 'moonbysun4@gmail.com' ? (
                                   <button onClick={() => deleteRule(r.id)} style={{ padding: 6, borderRadius: 8, border: '1px solid rgba(239,68,68,0.1)', background: 'rgba(127,29,29,0.2)', color: '#ef4444', cursor: 'pointer' }}>
                                     <Trash2 size={12} />
                                   </button>

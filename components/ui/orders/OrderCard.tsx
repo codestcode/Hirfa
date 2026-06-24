@@ -14,12 +14,17 @@ export function OrderCard({ order, activeTab, onUpdateStatus }: OrderCardProps) 
   return (
     <div className="bg-gradient-to-b from-[#1A1410] to-[#0A0D1A] rounded-2xl p-4 border border-[#FF8A00]/20 shadow-[0_0_20px_rgba(255,138,0,0.05)]">
       <div className="flex justify-between items-start mb-4">
-        <div className={`text-[10px] px-2 py-1 rounded-full ${
-          activeTab === 'pending' ? 'bg-[#FF8A00]/10 text-[#FF8A00]' :
-          activeTab === 'confirmed' ? 'bg-[#4ADE80]/10 text-[#4ADE80]' :
-          'bg-white/10 text-white/60'
-        }`}>
-          {activeTab === 'pending' ? 'جديد' : activeTab === 'confirmed' ? 'مؤكد' : 'مكتمل'}
+        <div className="flex items-center gap-2">
+          {order.is_emergency ? (
+            <div className="bg-[#ED4C5C]/15 text-[#ED4C5C] text-[10px] px-2 py-1 rounded-full font-bold">طوارئ</div>
+          ) : null}
+          <div className={`text-[10px] px-2 py-1 rounded-full ${
+            activeTab === 'pending' ? 'bg-[#FF8A00]/10 text-[#FF8A00]' :
+            activeTab === 'confirmed' ? 'bg-[#4ADE80]/10 text-[#4ADE80]' :
+            'bg-white/10 text-white/60'
+          }`}>
+            {activeTab === 'pending' ? 'جديد' : activeTab === 'confirmed' ? 'مؤكد' : 'مكتمل'}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-start text-right">

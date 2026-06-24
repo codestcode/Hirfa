@@ -19,14 +19,14 @@ export function useGallery() {
       })
   }, [user, supabase])
 
-  const uploadNewWork = async (title: string, beforeUrl: string, afterUrl: string) => {
+  const uploadNewWork = async (title: string, beforeB64: string, afterB64: string) => {
     if (!user) return
     setIsUploading(true)
     try {
       const { data, error } = await supabase.from('worker_gallery').insert([{
         worker_id: user.id,
-        before_url: beforeUrl,
-        after_url: afterUrl,
+        before_url: beforeB64,
+        after_url: afterB64,
         title: title || 'عمل جديد'
       }]).select().single()
       
@@ -34,6 +34,7 @@ export function useGallery() {
       if (data) setImages([{ id: data.id, beforeUrl: data.before_url, afterUrl: data.after_url, title: data.title }, ...images])
     } catch (e) {
       console.error(e)
+      alert('فشل الرفع: ' + (e instanceof Error ? e.message : 'خطأ غير معروف'))
     } finally {
       setIsUploading(false)
     }

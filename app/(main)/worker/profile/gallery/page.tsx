@@ -3,38 +3,54 @@
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SubPageLayout } from '@/components/ui/SubPageLayout'
 import React, { useState } from 'react'
-import { ImageIcon, Plus, X } from 'lucide-react'
+import { ImageIcon, Plus, X, Camera } from 'lucide-react'
 import { BeforeAfterCard } from '@/components/ui/gallery/BeforeAfterCard'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { InfoBanner } from '@/components/ui/InfoBanner'
 import { useGallery } from '@/hooks/useGallery'
-import { ImageUploader } from '@/components/ui/forms/ImageUploader'
 
 export default function GalleryPage() {
   const { images, isUploading, fetching, uploadNewWork, handleDelete } = useGallery()
   const [isModalOpen, setIsModalOpen] = useState(false)
   
   const [title, setTitle] = useState('')
-  const [beforeImage, setBeforeImage] = useState<string | null>(null)
-  const [afterImage, setAfterImage] = useState<string | null>(null)
+  const [beforeFile, setBeforeFile] = useState<File | null>(null)
+  const [afterFile, setAfterFile] = useState<File | null>(null)
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
+  const beforePreview = beforeFile ? URL.createObjectURL(beforeFile) : null
+  const afterPreview = afterFile ? URL.createObjectURL(afterFile) : null
+
+  const handleBeforeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setter(reader.result as string)
-      reader.readAsDataURL(file)
-    }
+    if (file) setBeforeFile(file)
+  }
+
+  const handleAfterFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) setAfterFile(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!beforeImage || !afterImage) return
-    await uploadNewWork(title, beforeImage, afterImage)
+    if (!beforeFile || !afterFile) return
+    
+    const readFile = (file: File): Promise<string> => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    
+    const [beforeB64, afterB64] = await Promise.all([
+      readFile(beforeFile),
+      readFile(afterFile),
+    ])
+    
+    await uploadNewWork(title, beforeB64, afterB64)
     setIsModalOpen(false)
     setTitle('')
-    setBeforeImage(null)
-    setAfterImage(null)
+    setBeforeFile(null)
+    setAfterFile(null)
   }
 
   return (
@@ -81,53 +97,69 @@ export default function GalleryPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => !isUploading && setIsModalOpen(false)}>
-          <div className="bg-[#0A0D1A] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-white/5">
-              <h3 className="font-bold">إضافة عمل جديد</h3>
-              <button onClick={() => !isUploading && setIsModalOpen(false)} className="text-white/50 hover:text-white"><X size={20} /></button>
+        <div 
+          onClick={() => !isUploading && setIsModalOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: '#0A0D1A', borderRadius: 24, width: '100%', maxWidth: 440, border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>إضافة عمل جديد</span>
+              <button onClick={() => !isUploading && setIsModalOpen(false)} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-xs text-white/70">عنوان العمل (اختياري)</label>
+            <form onSubmit={handleSubmit} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, display: 'block', marginBottom: 8 }}>عنوان العمل (اختياري)</label>
                 <input 
                   type="text" 
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="مثال: صيانة تكييف سبليت"
-                  className="bg-[#050814] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#FF8A00] outline-none transition-colors"
+                  style={{ width: '100%', backgroundColor: '#050814', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <ImageUploader 
-                  id="beforeImg" 
-                  label="قبل" 
-                  image={beforeImage} 
-                  onChange={e => handleImage(e, setBeforeImage)} 
-                  height="h-32"
-                />
-                <ImageUploader 
-                  id="afterImg" 
-                  label="بعد" 
-                  image={afterImage} 
-                  onChange={e => handleImage(e, setAfterImage)} 
-                  height="h-32"
-                />
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, display: 'block', marginBottom: 8 }}>صورة قبل العمل</label>
+                <input type="file" id="beforeImg" accept="image/*" style={{ display: 'none' }} onChange={handleBeforeFile} />
+                <label htmlFor="beforeImg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 140, backgroundColor: '#050814', border: '2px dashed rgba(255,255,255,0.1)', borderRadius: 16, cursor: 'pointer', overflow: 'hidden' }}>
+                  {beforePreview ? (
+                    <img src={beforePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Camera size={28} color={'#6B7A99'} />
+                      <span style={{ color: '#6B7A99', fontSize: 13, marginTop: 4 }}>اختر صورة</span>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, display: 'block', marginBottom: 8 }}>صورة بعد العمل</label>
+                <input type="file" id="afterImg" accept="image/*" style={{ display: 'none' }} onChange={handleAfterFile} />
+                <label htmlFor="afterImg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 140, backgroundColor: '#050814', border: '2px dashed rgba(255,255,255,0.1)', borderRadius: 16, cursor: 'pointer', overflow: 'hidden' }}>
+                  {afterPreview ? (
+                    <img src={afterPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Camera size={28} color={'#6B7A99'} />
+                      <span style={{ color: '#6B7A99', fontSize: 13, marginTop: 4 }}>اختر صورة</span>
+                    </div>
+                  )}
+                </label>
               </div>
 
               <button 
                 type="submit"
-                disabled={!beforeImage || !afterImage || isUploading}
-                className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white font-bold py-3 rounded-xl mt-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={!beforeFile || !afterFile || isUploading}
+                style={{ width: '100%', backgroundColor: '#FF8A00', color: 'white', fontWeight: 700, padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 14, opacity: (!beforeFile || !afterFile || isUploading) ? 0.5 : 1 }}
               >
-                {isUploading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>جاري الرفع...</span>
-                  </>
-                ) : 'حفظ ونشر'}
+                {isUploading ? 'جاري الرفع...' : 'حفظ ونشر'}
               </button>
             </form>
           </div>
