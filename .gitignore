@@ -8,9 +8,17 @@ __v0_jsx-dev-runtime.ts
 
 
 
-# Common ignores
-node_modules
-.next/
-.DS_Store
+# dependencies
+node_modules/
 
-.vercel
+# build output
+.next/
+
+# env files (secrets - do not commit)
+.env
+.env*.local
+
+# IDE
+.DS_Store
+*.swp
+*.swo
