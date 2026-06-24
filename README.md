@@ -1,6 +1,6 @@
 <img alt="Hirfa Logo" src="./Hirfa.png" height="700" />
 
-# craftsmen Maintenance Marketplace - حِرفة (Hirfa)
+# Craftsmen Maintenance Marketplace - حِرفة (Hirfa)
 
 **A full-stack, mobile-first app, The all-in-one home services platform for the Arabic world. Browse verified craftsmen, compare prices, view before/after portfolios, book instantly, and track your orders , all from your phone.**
 
