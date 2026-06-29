@@ -10,7 +10,7 @@ export function useVerification() {
   const [selfieImage, setSelfieImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
-  const [status, setStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified')
+  const [status, setStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
 
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
 

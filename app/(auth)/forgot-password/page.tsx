@@ -3,22 +3,39 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowLeft, Smartphone } from 'lucide-react'
+import { ArrowLeft, Mail } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [focusField, setFocusField] = useState(false)
+  const [error, setError] = useState('')
 
-  const isValid = phone.trim().length >= 10
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const isValid = emailRegex.test(email.trim())
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!isValid) return
     setIsLoading(true)
-    setTimeout(() => {
-      router.push('/otp?flow=reset')
-    }, 800)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/forgot-password/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error || 'حدث خطأ أثناء إرسال الرمز')
+      } else {
+        router.push(`/forgot-password/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`)
+      }
+    } catch (err) {
+      setError('حدث خطأ في الشبكة. الرجاء المحاولة لاحقاً.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -49,7 +66,7 @@ export default function ForgotPasswordPage() {
             نسيت كلمة المرور؟
           </h2>
           <p className="text-sm text-[#6B7A99] leading-relaxed">
-            أدخل رقم الهاتف المرتبط بحسابك وسنرسل لك رمزاً لتغيير كلمة المرور.
+            أدخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رمزاً لتغيير كلمة المرور.
           </p>
         </div>
 
@@ -59,22 +76,24 @@ export default function ForgotPasswordPage() {
               focusField ? 'border-[#FF8A00]' : 'border-[#1E2538]'
             }`}
           >
-            <span className="text-xs font-semibold text-[#6B7A99] whitespace-nowrap">
-              +20
-            </span>
-            <div className="w-px h-5 bg-[#1E2538] flex-shrink-0" />
             <input
-              type="tel"
-              placeholder="رقم الهاتف"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
+              type="email"
+              placeholder="البريد الإلكتروني"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               onFocus={() => setFocusField(true)}
               onBlur={() => setFocusField(false)}
               dir="ltr"
               className="flex-1 bg-transparent border-none outline-none text-[#F0F4FF] placeholder-[#6B7A99] text-sm text-left"
             />
-            <Smartphone size={18} className="text-[#4B5A7A] flex-shrink-0" />
+            <Mail size={18} className="text-[#4B5A7A] flex-shrink-0" />
           </div>
+
+          {error && (
+            <p className="text-xs text-[#FF4D4D] text-center">
+              {error}
+            </p>
+          )}
 
           <button
             onClick={handleSend}

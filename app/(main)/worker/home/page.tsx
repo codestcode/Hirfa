@@ -11,7 +11,7 @@ const Title = ({ t, c }: any) => <div className="flex items-center gap-2"><h2 cl
 export default function CraftsmanHome() {
   const { profile: p, newRequests: reqs, appointments: apps, isAvailable: isAv, toggleAvailability: tAv, handleRequest: hReq, handleLogout: hLog } = useHome()
   const stats = [{ l: 'طلبات اليوم', v: p?.completed_orders || 0, i: ClipboardCheck, c: '#FF8A00' }, { l: 'الأرباح', v: p?.total_earnings || 0, i: Banknote, c: '#FFB800' }, { l: 'التقييم', v: p?.rating || 0, i: Star, c: '#FFB800' }]
-  const links = [{ l: 'الجدول', h: '/worker/schedule', i: Calendar }, { l: 'الرسائل', h: '/worker/messages', i: MessageSquare }, { l: 'المحفظة', h: '/worker/wallet', i: Wallet }, { l: 'المعرض', h: '/worker/gallery', i: LayoutGrid }]
+  const links = [{ l: 'الجدول', h: '/worker/schedule', i: Calendar }, { l: 'الرسائل', h: '/worker/messages', i: MessageSquare }, { l: 'المحفظة', h: '/worker/wallet', i: Wallet }, { l: 'المعرض', h: '/worker/profile/gallery', i: LayoutGrid }]
 
   return (
     <SubPageLayout>

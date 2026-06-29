@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/contexts/AuthContext'
 
 export interface ServiceWorker {
   id: string
@@ -12,10 +13,13 @@ export interface ServiceWorker {
   completed_orders: number
   is_available: boolean
   min_price: number | null
+  governorate: string | null
+  area: string | null
 }
 
 export function useCategoryWorkers(categoryId: string) {
   const supabase = createClient()
+  const { profile: clientProfile } = useAuth()
   const [workers, setWorkers] = useState<ServiceWorker[]>([])
   const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -28,7 +32,7 @@ export function useCategoryWorkers(categoryId: string) {
 
     let query = supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, profession, rating, completed_orders, is_available')
+      .select('id, full_name, avatar_url, profession, rating, completed_orders, is_available, governorate, area')
       .eq('role', 'worker')
       .eq('verified', true)
       .eq('is_available', true)
@@ -58,18 +62,36 @@ export function useCategoryWorkers(categoryId: string) {
         min_price: priceMap[w.id] || null
       }))
 
-      if (sortBy === 'rating') {
-        result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      } else if (sortBy === 'price_asc') {
-        result.sort((a, b) => (a.min_price || 999999) - (b.min_price || 999999))
-      } else {
-        result.sort((a, b) => (b.min_price || 0) - (a.min_price || 0))
+      const getProximityScore = (worker: ServiceWorker) => {
+        if (!clientProfile) return 1
+        if (worker.governorate === clientProfile.governorate && worker.area === clientProfile.area) {
+          return 3
+        }
+        if (worker.governorate === clientProfile.governorate) {
+          return 2
+        }
+        return 1
       }
+
+      result.sort((a, b) => {
+        const scoreA = getProximityScore(a)
+        const scoreB = getProximityScore(b)
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA
+        }
+        if (sortBy === 'rating') {
+          return (b.rating || 0) - (a.rating || 0)
+        } else if (sortBy === 'price_asc') {
+          return (a.min_price || 999999) - (b.min_price || 999999)
+        } else {
+          return (b.min_price || 0) - (a.min_price || 0)
+        }
+      })
 
       setWorkers(result)
     }
     setLoading(false)
-  }, [supabase, categoryId, sortBy])
+  }, [supabase, categoryId, sortBy, clientProfile])
 
   useEffect(() => { fetchWorkers() }, [fetchWorkers])
 

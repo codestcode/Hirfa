@@ -20,7 +20,7 @@ export default function CraftsmanPage() {
     )
   }
 
-  if (!profile) {
+  if (!profile || !profile.verified) {
     return (
       <div dir="rtl" className="min-h-screen bg-[#020617] flex items-center justify-center">
         <div className="text-white">الحرفي غير موجود</div>

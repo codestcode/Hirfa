@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, use } from 'react'
+import { useState, useMemo, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowLeft, Plus } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 
@@ -29,13 +30,89 @@ const TIME_SLOTS = [
   '13:00', '14:00', '15:00', '16:00', '17:00'
 ]
 
+const defaultSchedule: Record<string, { active: boolean; start: string; end: string }> = {
+  sat: { active: true, start: '09:00', end: '17:00' },
+  sun: { active: true, start: '09:00', end: '17:00' },
+  mon: { active: true, start: '09:00', end: '17:00' },
+  tue: { active: true, start: '09:00', end: '17:00' },
+  wed: { active: true, start: '09:00', end: '17:00' },
+  thu: { active: true, start: '09:00', end: '17:00' },
+  fri: { active: false, start: '09:00', end: '17:00' }
+}
+
+const getDayKey = (dateStr: string): string => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const dateObj = new Date(year, month - 1, day)
+  const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+  return days[dateObj.getDay()]
+}
+
 export default function BookingPage({ params }: { params: Promise<{ workerId: string }> }) {
   const router = useRouter()
   const { workerId } = use(params)
+  const supabase = createClient()
+  
   const weekDates = useMemo(() => getWeekDates(), [])
   const [selectedDate, setSelectedDate] = useState(weekDates[0].dateStr)
   const [selectedTime, setSelectedTime] = useState('')
   const [notes, setNotes] = useState('')
+
+  const [workerProfile, setWorkerProfile] = useState<any>(null)
+  const [schedule, setSchedule] = useState<any[]>([])
+  const [bookedTimes, setBookedTimes] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    async function loadData() {
+      setLoading(true)
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', workerId).single()
+      if (!active) return
+      setWorkerProfile(prof)
+      
+      if (prof && prof.verified) {
+        const { data: sched } = await supabase.from('worker_schedule').select('*').eq('worker_id', workerId)
+        if (active && sched) setSchedule(sched)
+        
+        const { data: books } = await supabase
+          .from('bookings')
+          .select('appointment_time')
+          .eq('worker_id', workerId)
+          .eq('appointment_date', selectedDate)
+          .not('status', 'eq', 'cancelled')
+        
+        if (active && books) {
+          setBookedTimes(books.map(b => b.appointment_time.slice(0, 5)))
+        }
+      }
+      setLoading(false)
+    }
+    loadData()
+    return () => {
+      active = false
+    }
+  }, [workerId, selectedDate, supabase])
+
+  const currentDayKey = useMemo(() => getDayKey(selectedDate), [selectedDate])
+  
+  const daySched = useMemo(() => {
+    const dbSched = schedule.find(s => s.day_id === currentDayKey)
+    if (dbSched) {
+      return {
+        active: dbSched.is_active,
+        start: dbSched.start_time.substring(0, 5),
+        end: dbSched.end_time.substring(0, 5)
+      }
+    }
+    return defaultSchedule[currentDayKey]
+  }, [schedule, currentDayKey])
+
+  const isSlotAvailable = (time: string) => {
+    if (!daySched || !daySched.active) return false
+    if (time < daySched.start || time >= daySched.end) return false
+    if (bookedTimes.includes(time)) return false
+    return true
+  }
 
   const selectedDateObj = weekDates.find(d => d.dateStr === selectedDate)
   const monthYear = selectedDateObj
@@ -45,6 +122,22 @@ export default function BookingPage({ params }: { params: Promise<{ workerId: st
   const handleContinue = () => {
     if (!selectedTime) return
     router.push(`/client/booking/confirm?workerId=${workerId}&date=${selectedDate}&time=${selectedTime}&notes=${encodeURIComponent(notes)}`)
+  }
+
+  if (loading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="text-white">جاري التحميل...</div>
+      </div>
+    )
+  }
+
+  if (!workerProfile || !workerProfile.verified) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="text-white">الحرفي غير موجود</div>
+      </div>
+    )
   }
 
   return (
@@ -98,16 +191,19 @@ export default function BookingPage({ params }: { params: Promise<{ workerId: st
             {TIME_SLOTS.map(time => {
               const isSelected = selectedTime === time
               const isPast = selectedDateObj && selectedDateObj.date < new Date(new Date().toDateString())
+              const available = isSlotAvailable(time)
+              const isDisabled = isPast || !available
+              
               return (
                 <button
                   key={time}
-                  disabled={isPast}
+                  disabled={isDisabled}
                   onClick={() => setSelectedTime(time)}
                   className={`h-12 rounded-xl font-bold text-sm transition ${
                     isSelected
                       ? 'bg-[#FFA504] text-white'
                       : 'bg-white text-[#050B2C]'
-                  } ${isPast ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   {time}
                 </button>

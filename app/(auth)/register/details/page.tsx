@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Briefcase, Clock, Building2, MapPin } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const GOVERNORATES = [
   'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'البحيرة', 'الشرقية',
@@ -23,6 +24,7 @@ type FocusField = 'profession' | 'years' | 'governorate' | 'area' | null
 
 export default function CraftsmanDetailsPage() {
   const router = useRouter()
+  const supabase = createClient()
 
   const [profession, setProfession] = useState('')
   const [years, setYears] = useState('')
@@ -30,13 +32,23 @@ export default function CraftsmanDetailsPage() {
   const [area, setArea] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [focusField, setFocusField] = useState<FocusField>(null)
+  const [professionsList, setProfessionsList] = useState<string[]>(PROFESSIONS)
 
   useEffect(() => {
     setProfession(localStorage.getItem('pendingProfession') || '')
     setYears(localStorage.getItem('pendingExperience') || '')
     setGovernorate(localStorage.getItem('pendingGovernorate') || '')
     setArea(localStorage.getItem('pendingArea') || '')
-  }, [])
+
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('label_ar')
+      if (data && data.length > 0) {
+        setProfessionsList(data.map(c => c.label_ar))
+      }
+    }
+    fetchCategories()
+  }, [supabase])
+
   const [error, setError] = useState('')
   const isValid = profession && years && governorate && area
 
@@ -106,7 +118,7 @@ export default function CraftsmanDetailsPage() {
                 style={{ color: profession ? '#F0F4FF' : '#4B5A7A' }}
               >
                 <option value="" className="bg-[#0F1322] text-[#6B7A99]">اختر مهنتك الأساسية</option>
-                {PROFESSIONS.map(p => (
+                {professionsList.map(p => (
                   <option key={p} value={p} className="bg-[#0F1322] text-[#F0F4FF]">
                     {p}
                   </option>

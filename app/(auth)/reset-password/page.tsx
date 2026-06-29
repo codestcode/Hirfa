@@ -1,18 +1,23 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react'
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const email = searchParams.get('email') || ''
+  const token = searchParams.get('token') || ''
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [focusField, setFocusField] = useState<'password' | 'confirm' | null>(null)
+  const [error, setError] = useState('')
 
   const hasMinLength = password.length >= 8
   const hasNumber = /\d/.test(password)
@@ -22,12 +27,28 @@ export default function ResetPasswordPage() {
   const matchesConfirm = password === confirmPassword && confirmPassword.length > 0
   const canSubmit = isPasswordValid && matchesConfirm
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return
     setIsLoading(true)
-    setTimeout(() => {
-      router.push('/login')
-    }, 1200)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/forgot-password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token, password })
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error || 'حدث خطأ أثناء تعيين كلمة المرور الجديدة')
+      } else {
+        alert('تم تغيير كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بها.')
+        router.push('/login')
+      }
+    } catch (err) {
+      setError('حدث خطأ في الشبكة. الرجاء المحاولة لاحقاً.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -146,6 +167,12 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-xs text-[#FF4D4D] text-center">
+              {error}
+            </p>
+          )}
+
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || isLoading}
@@ -156,5 +183,15 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050814] flex items-center justify-center" />
+    }>
+      <ResetPasswordPageContent />
+    </Suspense>
   )
 }

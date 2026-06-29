@@ -39,6 +39,18 @@ export function CompleteOAuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [focusField, setFocusField] = useState<string | null>(null)
+  const [professionsList, setProfessionsList] = useState<string[]>(PROFESSIONS)
+
+  useEffect(() => {
+    const supabase = createClient()
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('label_ar')
+      if (data && data.length > 0) {
+        setProfessionsList(data.map(c => c.label_ar))
+      }
+    }
+    fetchCategories()
+  }, [])
 
   const isClient = role === 'client'
   const isWorker = role === 'worker'
@@ -185,7 +197,7 @@ export function CompleteOAuthPage() {
                 style={{ color: profession ? '#F0F4FF' : '#4B5A7A' }}
               >
                 <option value="" className="bg-[#0F1322] text-[#6B7A99]">اختر مهنتك الأساسية</option>
-                {PROFESSIONS.map(p => (
+                {professionsList.map(p => (
                   <option key={p} value={p} className="bg-[#0F1322] text-[#F0F4FF]">
                     {p}
                   </option>

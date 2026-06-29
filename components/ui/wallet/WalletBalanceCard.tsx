@@ -3,9 +3,10 @@ import { Banknote, ArrowUpRight } from 'lucide-react'
 
 interface WalletBalanceCardProps {
   balance: number
+  onWithdraw?: () => void
 }
 
-export function WalletBalanceCard({ balance }: WalletBalanceCardProps) {
+export function WalletBalanceCard({ balance, onWithdraw }: WalletBalanceCardProps) {
   return (
     <div className="bg-gradient-to-br from-[#1E2538] to-[#0A0D1A] rounded-3xl p-6 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFB800]/5 rounded-full blur-2xl" />
@@ -24,7 +25,10 @@ export function WalletBalanceCard({ balance }: WalletBalanceCardProps) {
         </div>
         
         <div className="flex gap-3">
-          <button className="flex-1 bg-gradient-to-r from-[#FF8A00] to-[#FFB800] text-[#050814] text-sm font-bold py-3.5 rounded-xl shadow-[0_4px_12px_rgba(255,138,0,0.3)] hover:opacity-90 flex justify-center items-center gap-2 transition-opacity">
+          <button 
+            onClick={onWithdraw}
+            className="flex-1 bg-gradient-to-r from-[#FF8A00] to-[#FFB800] text-[#050814] text-sm font-bold py-3.5 rounded-xl shadow-[0_4px_12px_rgba(255,138,0,0.3)] hover:opacity-90 flex justify-center items-center gap-2 transition-opacity"
+          >
             سحب الرصيد <ArrowUpRight size={16} />
           </button>
         </div>

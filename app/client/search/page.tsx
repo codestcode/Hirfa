@@ -77,7 +77,22 @@ export default function SearchPage() {
         .or(`full_name.ilike.%${q}%,profession.ilike.%${q}%,category.ilike.%${q}%`)
         .order('rating', { ascending: false })
         .limit(20)
-      setResults(data as unknown as SearchResult[] || [])
+      
+      let sorted = data as unknown as SearchResult[] || []
+      if (profile) {
+        const getProximityScore = (w: SearchResult) => {
+          if (w.governorate === profile.governorate && w.area === profile.area) return 3
+          if (w.governorate === profile.governorate) return 2
+          return 1
+        }
+        sorted = [...sorted].sort((a, b) => {
+          const scoreA = getProximityScore(a)
+          const scoreB = getProximityScore(b)
+          if (scoreA !== scoreB) return scoreB - scoreA
+          return (b.rating || 0) - (a.rating || 0)
+        })
+      }
+      setResults(sorted)
       setLoading(false)
     }, 300)
     return () => clearTimeout(timer)
