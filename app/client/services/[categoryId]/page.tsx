@@ -4,6 +4,6 @@ export function generateStaticParams() {
   return [{ categoryId: 'dummy' }];
 }
 
-export default function Page() {
-  return <ClientPage />;
+export default function Page({ params }: { params: any }) {
+  return <ClientPage params={params} />;
 }
