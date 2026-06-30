@@ -12,4 +12,8 @@ const nextConfig = {
   turbopack: { root: '.' },
 };
 
+if (process.env.CAPACITOR_BUILD === 'true') {
+  nextConfig.output = 'export';
+}
+
 export default nextConfig;
