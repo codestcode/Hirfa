@@ -167,8 +167,3 @@ export default function EditCardPage() {
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}

@@ -43,8 +43,3 @@ export default function ChatRoomPage({ params }: { params: { id: string } }) {
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}

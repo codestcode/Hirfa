@@ -391,8 +391,3 @@ export default function WorkerBookingDetailsPage() {
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}

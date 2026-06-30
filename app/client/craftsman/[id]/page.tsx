@@ -295,8 +295,3 @@ export default function CraftsmanPage() {
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}

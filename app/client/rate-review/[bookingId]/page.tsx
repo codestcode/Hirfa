@@ -200,8 +200,3 @@ export default function RateReviewPage() {
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}

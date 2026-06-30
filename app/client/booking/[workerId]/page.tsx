@@ -341,8 +341,3 @@ export default function BookingPage({ params }: { params: Promise<{ workerId: st
     </div>
   )
 }
-
-
-export function generateStaticParams() {
-  return [];
-}
