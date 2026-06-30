@@ -38,15 +38,11 @@ jobs:
 
       - name: Build Next.js app
         run: |
-          # Ensure Next.js builds as a static export
-          if ! grep -q "output: 'export'" next.config.mjs; then
-            sed -i "s/const nextConfig = {/const nextConfig = {\n  output: 'export',/" next.config.mjs
-          fi
           # Move API routes out of the way because they cannot be statically exported
           if [ -d "app/api" ]; then
             mv app/api .temp-api-backup
           fi
-          pnpm run build
+          pnpm run build:capacitor
         env:
           NODE_ENV: production
           
