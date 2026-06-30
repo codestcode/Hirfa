@@ -14,6 +14,9 @@ export interface BookingInput {
   notes?: string
   payment_method?: string
   total_amount: number
+  lat?: number
+  lng?: number
+  images?: string[]
 }
 
 export function useClientBooking() {
@@ -26,6 +29,24 @@ export function useClientBooking() {
     if (!profile) { setError('يجب تسجيل الدخول أولاً'); return null }
     setSubmitting(true)
     setError('')
+    let finalNotes = data.notes || ''
+
+    if (data.images && data.images.length > 0) {
+      try {
+        const res = await fetch('/api/upload-booking-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ images: data.images })
+        })
+        const result = await res.json()
+        if (result.success && result.urls) {
+          finalNotes = JSON.stringify({ text: finalNotes, images: result.urls })
+        }
+      } catch (e) {
+        console.error('Failed to upload images', e)
+      }
+    }
+
     const { data: booking, error: err } = await supabase.from('bookings').insert({
       client_id: profile.id,
       worker_id: data.worker_id,
@@ -35,6 +56,8 @@ export function useClientBooking() {
       appointment_time: data.appointment_time,
       address: data.address,
       price: data.total_amount,
+      notes: finalNotes || null,
+      payment_method: data.payment_method || 'cash',
       status: 'pending'
     }).select('id').single()
 

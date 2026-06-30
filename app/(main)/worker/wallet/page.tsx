@@ -23,7 +23,7 @@ export default function WalletPage() {
         <div>
           <h3 className="font-bold text-sm mb-4 flex justify-between"><span>سجل المعاملات</span><span className="text-[10px] text-[#FF8A00] bg-[#FF8A00]/10 px-2 py-1 rounded-full">آخر 30 يوم</span></h3>
           <div className="flex flex-col gap-3">
-            {l ? <PageLoader /> : t.length ? t.map((x: any) => <TransactionCard key={x.id} serviceName={x.service_name} date={new Date(x.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })} price={x.price} />) : <Empty />}
+            {l ? <PageLoader /> : t.length ? t.map((x: any) => <TransactionCard key={x.id} description={x.description} date={new Date(x.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })} amount={x.amount} />) : <Empty />}
           </div>
         </div>
       </div>

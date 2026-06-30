@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createNotification } from '@/lib/notifications'
+import { AlertTriangle, ShieldAlert } from 'lucide-react'
 
 interface AvailableWorker {
   id: string
@@ -43,14 +44,145 @@ const EMERGENCY_COLORS: Record<string, string> = {
 
 export default function EmergencyPage() {
   const router = useRouter()
-  const [step, setStep] = useState<'select' | 'workers'>('select')
+  const [step, setStep] = useState<'select' | 'details' | 'searching' | 'fallback' | 'workers'>('select')
   const [selectedType, setSelectedType] = useState<typeof EMERGENCY_TYPES[0] | null>(null)
+  
+  const [description, setDescription] = useState('')
+  const [clientLat, setClientLat] = useState(30.0444)
+  const [clientLng, setClientLng] = useState(31.2357)
+  
+  const [countdown, setCountdown] = useState(60)
+  const [currentEmergencyId, setCurrentEmergencyId] = useState<string | null>(null)
+
   const [workers, setWorkers] = useState<AvailableWorker[]>([])
   const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
 
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const channelRef = useRef<any>(null)
+
+  // Geolocation is now requested on user interaction in handleTypeSelect
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (channelRef.current) {
+        const supabase = createClient()
+        supabase.removeChannel(channelRef.current)
+      }
+    }
+  }, [])
+
   const handleTypeSelect = async (type: typeof EMERGENCY_TYPES[0]) => {
     setSelectedType(type)
+    setStep('details')
+    
+    try {
+      if (typeof window !== 'undefined') {
+        const { Geolocation } = await import('@capacitor/geolocation')
+        const permissions = await Geolocation.checkPermissions()
+        
+        if (permissions.location !== 'granted') {
+          const req = await Geolocation.requestPermissions()
+          if (req.location !== 'granted') {
+            console.warn('Location permission denied')
+            return
+          }
+        }
+        
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+        setClientLat(pos.coords.latitude)
+        setClientLng(pos.coords.longitude)
+      }
+    } catch (err) {
+      console.error('Geolocation error:', err)
+      // Fallback or ignore
+    }
+  }
+
+  const startSOSSearch = async () => {
+    if (!selectedType) return
+    setStep('searching')
+    setCountdown(60)
+    
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert('يجب تسجيل الدخول أولاً')
+      setStep('select')
+      return
+    }
+
+    const { data: emergency, error: err } = await supabase
+      .from('emergencies')
+      .insert({
+        client_id: user.id,
+        type: selectedType.id,
+        description: description.trim() || `نداء استغاثة: ${selectedType.label}`,
+        status: 'pending',
+        latitude: clientLat,
+        longitude: clientLng
+      })
+      .select('id')
+      .single()
+
+    if (err || !emergency) {
+      alert('فشل إرسال البلاغ: ' + (err?.message || 'خطأ غير معروف'))
+      setStep('select')
+      return
+    }
+
+    setCurrentEmergencyId(emergency.id)
+
+    if (selectedType.profession) {
+      const { data: matchedWorkers } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'worker')
+        .eq('profession', selectedType.profession)
+        .eq('is_available', true)
+      
+      if (matchedWorkers) {
+        matchedWorkers.forEach(w => {
+          createNotification(w.id, 'طلب طوارئ عاجل!', `مطلوب ${selectedType.label} فوراً بالقرب منك: ${description || 'اضغط للتفاصيل'}`)
+        })
+      }
+    }
+
+    const channel = supabase
+      .channel(`emergency-listen-${emergency.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', filter: `id=eq.${emergency.id}`, schema: 'public', table: 'emergencies' },
+        (payload) => {
+          const updated = payload.new as any
+          if (updated.status === 'confirmed' && updated.booking_id) {
+            if (timerRef.current) clearInterval(timerRef.current)
+            supabase.removeChannel(channel)
+            router.push(`/client/order/success?id=${updated.booking_id}`)
+          }
+        }
+      )
+      .subscribe()
+
+    channelRef.current = channel
+
+    timerRef.current = setInterval(async () => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          supabase.removeChannel(channel)
+          supabase.from('emergencies').update({ status: 'cancelled' }).eq('id', emergency.id)
+          setStep('fallback')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const loadManualWorkers = async () => {
+    if (!selectedType) return
     setLoading(true)
     setStep('workers')
 
@@ -60,10 +192,11 @@ export default function EmergencyPage() {
       .select('id, full_name, avatar_url, profession, rating, completed_orders')
       .eq('role', 'worker')
       .eq('verified', true)
+      .eq('verification_status', 'verified')
       .eq('is_available', true)
 
-    if (type.profession) {
-      query = query.eq('profession', type.profession)
+    if (selectedType.profession) {
+      query = query.eq('profession', selectedType.profession)
     }
 
     const { data } = await query
@@ -79,25 +212,12 @@ export default function EmergencyPage() {
     setCreating(true)
 
     const supabase = createClient()
-    const { data: { user }, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !user) {
-      console.error('Auth error:', userErr)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       alert('يجب تسجيل الدخول أولاً')
       setCreating(false)
       return
     }
-
-    const { data: address } = await supabase
-      .from('addresses')
-      .select('city, street, building, apartment')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    const fullAddress = address
-      ? `${address.city}، ${address.street}${address.building ? `، مبنى ${address.building}` : ''}${address.apartment ? `، شقة ${address.apartment}` : ''}`
-      : 'طلب طوارئ'
 
     const { data: booking, error: bookErr } = await supabase
       .from('bookings')
@@ -106,72 +226,70 @@ export default function EmergencyPage() {
         worker_id: workerId,
         service_name: selectedType.label,
         status: 'confirmed',
-        price: 0,
+        price: 200,
         is_emergency: true,
         emergency_type: selectedType.id,
-        notes: 'طلب طوارئ فوري',
+        notes: description || 'طلب طوارئ فوري مباشر',
         payment_method: 'cash',
         appointment_date: new Date().toISOString().split('T')[0],
         appointment_time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        address: fullAddress,
+        address: 'موقع الطوارئ المحدد',
       })
       .select('id')
       .single()
 
     setCreating(false)
     if (bookErr || !booking) {
-      console.error('Booking insert error:', bookErr)
-      alert('حدث خطأ: ' + (bookErr?.message || 'تعذر إنشاء الطلب'))
+      alert('تعذر إنشاء الطلب: ' + bookErr?.message)
       return
     }
 
     createNotification(user.id, 'تم إرسال طلب طوارئ', `طلب مساعدة عاجلة: ${selectedType.label}`)
-    const { data: worker } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', workerId)
-      .single()
-    createNotification(workerId, 'طلب طوارئ جديد', `طلب مساعدة عاجلة من ${user.email || 'عميل'}`)
+    createNotification(workerId, 'طلب طوارئ جديد', 'تم اختيارك لطلب مساعدة عاجلة فورية.')
     router.push(`/client/order/success?id=${booking.id}`)
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#020617]">
-      {/* Header */}
+    <div dir="rtl" className="min-h-screen bg-[#020617] text-right">
       <div className="sticky top-0 z-10 bg-[#020617]/80 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center h-14 max-w-[512px] mx-auto px-4 relative">
-          <button onClick={() => step === 'workers' ? setStep('select') : router.back()} className="absolute left-4">
+          <button 
+            onClick={() => {
+              if (step === 'details') setStep('select')
+              else if (step === 'searching' || step === 'fallback') setStep('details')
+              else if (step === 'workers') setStep('fallback')
+              else router.back()
+            }} 
+            className="absolute right-4"
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12.175 9H0V7H12.175L6.575 1.4L8 0L16 8L8 16L6.575 14.6L12.175 9Z" fill="white" />
             </svg>
           </button>
           <h1 className="text-white text-xl font-bold w-full text-center">
-            {step === 'select' ? 'طلب طوارئ' : 'اختيار حرفي'}
+            {step === 'select' ? 'طلب طوارئ عاجل' :
+             step === 'details' ? 'تفاصيل الاستغاثة' :
+             step === 'searching' ? 'جاري البحث الحقيقي' :
+             step === 'fallback' ? 'لم نجد حرفي' : 'اختيار يدوي'}
           </h1>
         </div>
       </div>
 
       <div className="max-w-[512px] mx-auto px-4 pb-32">
-        {step === 'select' ? (
+        {step === 'select' && (
           <>
-            {/* Emergency Banner */}
             <div className="mt-4 bg-gradient-to-r from-[#ED4C5C]/15 to-[#ED4C5C]/5 border border-[#ED4C5C]/30 rounded-xl p-4 flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-[#ED4C5C]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ED4C5C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 9V14M12 17V17.01M5.5 2L2 5.5L5.5 9"/>
-                  <path d="M18.5 2L22 5.5L18.5 9"/>
-                  <path d="M12 2C7.58172 2 4 5.58172 4 10C4 12.5286 5.01314 14.0093 7 16L12 22L17 16C18.9869 14.0093 20 12.5286 20 10C20 5.58172 16.4183 2 12 2Z"/>
-                </svg>
+                <AlertTriangle size={16} className="text-[#ED4C5C]" />
               </div>
               <div>
-                <p className="text-[#ED4C5C] font-bold text-sm">طلب مساعدة عاجلة</p>
-                <p className="text-[#ED4C5C]/70 text-xs mt-1">اختر نوع المشكلة وسنرسل لك أقرب حرفي متاح فوراً</p>
+                <p className="text-[#ED4C5C] font-bold text-sm">نداء استغاثة SOS فوري</p>
+                <p className="text-[#ED4C5C]/70 text-xs mt-1">اختر نوع المشكلة وسنقوم ببث النداء فوراً لجميع الحرفيين المتاحين من حولك</p>
               </div>
             </div>
 
-            <p className="text-[#94A3B8] text-sm text-center mt-6 mb-4">ما نوع المشكلة التي تواجهها؟</p>
+            <p className="text-[#94A3B8] text-sm text-center mt-6 mb-4">ما هو نوع المشكلة الطارئة؟</p>
 
-            {/* Emergency Type Grid */}
             <div className="grid grid-cols-2 gap-3">
               {EMERGENCY_TYPES.map((type) => (
                 <button
@@ -187,47 +305,119 @@ export default function EmergencyPage() {
               ))}
             </div>
           </>
-        ) : (
-          <>
-            {/* Selected Type Indicator */}
-            <div className="mt-4 bg-[#0F172A]/60 rounded-xl p-4 flex items-center gap-3 border border-[#ED4C5C]/20">
+        )}
+
+        {step === 'details' && selectedType && (
+          <div className="mt-6 flex flex-col gap-5">
+            <div className="bg-[#0F172A]/60 rounded-xl p-4 flex items-center gap-3 border border-[#ED4C5C]/20">
               <div className="w-10 h-10 rounded-full bg-[#ED4C5C]/20 flex items-center justify-center">
-                <span dangerouslySetInnerHTML={{ __html: EMOJI_TO_SVG[selectedType?.icon || '🔧'] }} />
+                <span dangerouslySetInnerHTML={{ __html: EMOJI_TO_SVG[selectedType.icon] }} />
               </div>
-              <div className="flex-1">
-                <p className="text-white font-bold">{selectedType?.label}</p>
-                <p className="text-[#94A3B8] text-xs">جاري البحث عن حرفيين متاحين...</p>
-              </div>
-              <div className="w-5 h-5 rounded-full border-2 border-[#22C55E] flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
+              <div>
+                <p className="text-white font-bold">{selectedType.label}</p>
+                <p className="text-slate-400 text-xs">نداء استغاثة SOS</p>
               </div>
             </div>
 
-            {/* Workers List */}
+            <div className="flex flex-col gap-2 mt-2">
+              <label className="text-xs font-bold text-[#94A3B8] text-right">اكتب تفاصيل المشكلة الطارئة</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="مثال: تسريب مياه شديد من محبس الحمام الرئيسي..."
+                className="w-full min-h-[100px] p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 text-white text-sm outline-none placeholder-[#4B5A7A] focus:border-[#ED4C5C]/50 focus:bg-white/10 transition-all text-right shadow-inner shadow-black/20"
+              />
+            </div>
+
+            <button
+              onClick={startSOSSearch}
+              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-[#FF3366] to-[#FF9933] text-white font-bold text-base shadow-[0_0_20px_rgba(255,51,102,0.4)] transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <ShieldAlert size={20} className="animate-pulse" />
+              <span>بث نداء الاستغاثة SOS الآن</span>
+            </button>
+          </div>
+        )}
+
+        {step === 'searching' && selectedType && (
+          <div className="flex flex-col items-center justify-center pt-16 text-center">
+            <div className="relative w-64 h-64 flex items-center justify-center mb-8">
+              {/* Radar animation */}
+              <div className="absolute inset-0 rounded-full bg-gray-800/50 border-2 border-gray-700"></div>
+              <div className="absolute inset-0 rounded-full bg-transparent border-t-2 border-green-400 animate-spin-slow"></div>
+              <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-green-400 to-transparent animate-radar-sweep"></div>
+              
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ED4C5C] to-[#EF4444] flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-[#ED4C5C]/30 relative z-10 animate-pulse">
+                SOS
+              </div>
+            </div>
+
+            <h3 className="text-white text-2xl font-bold">جاري البحث عن أقرب حرفي متاح...</h3>
+            <p className="text-slate-400 text-sm mt-2 max-w-xs leading-5">
+              نقوم ببث النداء للأجهزة والحرفيين المتواجدين في منطقتك حالياً. يرجى الانتظار.
+            </p>
+
+            <div className="mt-12 bg-gray-800/50 border border-gray-700 px-8 py-5 rounded-2xl flex flex-col gap-2 items-center">
+              <span className="text-sm text-slate-400 font-bold uppercase tracking-wider">الوقت المتبقي للقبول</span>
+              <span className="text-5xl font-bold text-red-500 mt-1">{countdown}</span>
+            </div>
+          </div>
+        )}
+
+        {step === 'fallback' && (
+          <div className="flex flex-col items-center justify-center pt-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-[#ED4C5C]/10 flex items-center justify-center mb-4 text-[#ED4C5C]">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-white text-lg font-bold">عذراً، لم نتمكن من العثور على حرفي</h3>
+            <p className="text-slate-400 text-xs mt-2 max-w-xs leading-5">
+              انتهى وقت البحث التلقائي ولم يستجب أي حرفي لنداء الاستغاثة في هذه اللحظة.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 w-full">
+              <button
+                onClick={startSOSSearch}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-l from-[#ED4C5C] to-[#EF4444] text-white font-bold text-sm shadow-md"
+              >
+                إعادة محاولة البث SOS
+              </button>
+              <button
+                onClick={loadManualWorkers}
+                className="w-full py-3.5 rounded-xl bg-[#1E2538] border border-white/5 text-white font-bold text-sm hover:bg-[#2A3441] transition-colors"
+              >
+                البحث والاختيار اليدوي من القائمة
+              </button>
+              <button
+                onClick={() => setStep('select')}
+                className="w-full py-3 text-slate-400 text-xs hover:underline text-center"
+              >
+                العودة للرئيسية
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'workers' && selectedType && (
+          <>
+            <div className="mt-4 bg-[#0F172A]/60 rounded-xl p-4 flex items-center gap-3 border border-[#ED4C5C]/20">
+              <div className="w-10 h-10 rounded-full bg-[#ED4C5C]/20 flex items-center justify-center">
+                <span dangerouslySetInnerHTML={{ __html: EMOJI_TO_SVG[selectedType.icon] }} />
+              </div>
+              <div className="flex-1 text-right">
+                <p className="text-white font-bold">{selectedType.label}</p>
+                <p className="text-[#94A3B8] text-xs">قائمة الحرفيين المتاحين حالياً</p>
+              </div>
+            </div>
+
             {loading ? (
               <div className="space-y-3 mt-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-[#0F172A]/60 rounded-2xl p-4 animate-pulse">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-[#1E2538]" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-24 bg-[#1E2538] rounded" />
-                        <div className="h-3 w-32 bg-[#1E2538] rounded" />
-                      </div>
-                    </div>
-                  </div>
+                  <div key={i} className="bg-[#0F172A]/60 rounded-2xl p-4 h-24 animate-pulse" />
                 ))}
               </div>
             ) : workers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center mt-16">
-                <div className="w-16 h-16 rounded-full bg-[#ED4C5C]/10 flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ED4C5C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 8V12M12 16H12.01"/>
-                  </svg>
-                </div>
+              <div className="flex flex-col items-center justify-center mt-16 text-center">
                 <p className="text-[#94A3B8] text-base font-bold">لا يوجد حرفيون متاحون حالياً</p>
-                <p className="text-[#73799F] text-sm mt-2 text-center">حاول مرة أخرى لاحقاً أو اختر نوع مشكلة آخر</p>
                 <button
                   onClick={() => setStep('select')}
                   className="mt-6 px-8 py-3 rounded-xl bg-[#FFA504] text-[#050B2C] font-bold"
@@ -237,9 +427,6 @@ export default function EmergencyPage() {
               </div>
             ) : (
               <div className="space-y-3 mt-4">
-                <p className="text-[#94A3B8] text-sm">
-                  تم العثور على <span className="text-white font-bold">{workers.length}</span> حرفي متاح
-                </p>
                 {workers.map((worker) => (
                   <div
                     key={worker.id}
@@ -257,7 +444,7 @@ export default function EmergencyPage() {
                           </div>
                           <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#020617] bg-[#22C55E]" />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 text-right">
                           <div className="flex items-center justify-between">
                             <h3 className="text-white text-base font-bold truncate">
                               {worker.full_name || 'حرفي'}
@@ -282,13 +469,6 @@ export default function EmergencyPage() {
                                 {worker.completed_orders} طلب مكتمل
                               </span>
                             )}
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <div className="w-9 h-9 rounded-full bg-[#FFA504]/15 flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M6 12L10 8L6 4" stroke="#FFA504" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
                           </div>
                         </div>
                       </div>

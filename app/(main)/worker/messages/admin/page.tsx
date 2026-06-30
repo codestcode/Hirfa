@@ -16,7 +16,7 @@ export default function WorkerAdminMessagesPage() {
     if (!profile) return
     setLoading(true)
     const { data } = await supabase
-      .from('messages')
+      .from('admin_messages')
       .select('*, sender:sender_id(full_name, email, avatar_url)')
       .eq('receiver_id', profile.id)
       .is('booking_id', null)
@@ -30,7 +30,7 @@ export default function WorkerAdminMessagesPage() {
   }, [fetchMessages])
 
   const markAsRead = async (messageId: string) => {
-    await supabase.from('messages').update({ is_read: true }).eq('id', messageId)
+    await supabase.from('admin_messages').update({ is_read: true }).eq('id', messageId)
     fetchMessages()
   }
 

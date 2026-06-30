@@ -48,29 +48,20 @@ function OTPPageContent() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const pendingAvatar = localStorage.getItem('pendingAvatar')
-      const pendingIdFront = localStorage.getItem('pendingIdFront')
-      const pendingIdBack = localStorage.getItem('pendingIdBack')
-      const pendingPortfolio = localStorage.getItem('pendingPortfolio')
-
+      const meta = user.user_metadata || {}
       const updates: any = {}
-      if (pendingAvatar) updates.avatar_url = pendingAvatar
-      if (pendingIdFront) updates.id_front_url = pendingIdFront
-      if (pendingIdBack) updates.id_back_url = pendingIdBack
-      if (pendingPortfolio) {
-        try {
-          updates.portfolio_urls = JSON.parse(pendingPortfolio)
-        } catch (e) {
-          console.error(e)
-        }
-      }
+      
+      if (meta.avatar_url) updates.avatar_url = meta.avatar_url
+      if (meta.id_front_url) updates.id_front_url = meta.id_front_url
+      if (meta.id_back_url) updates.id_back_url = meta.id_back_url
+      if (meta.portfolio_urls) updates.portfolio_urls = meta.portfolio_urls
+      if (meta.profession) updates.profession = meta.profession
+      if (meta.governorate) updates.governorate = meta.governorate
+      if (meta.area) updates.area = meta.area
+      if (meta.phone) updates.phone = meta.phone
 
       if (Object.keys(updates).length > 0) {
         await supabase.from('profiles').update(updates).eq('id', user.id)
-        localStorage.removeItem('pendingAvatar')
-        localStorage.removeItem('pendingIdFront')
-        localStorage.removeItem('pendingIdBack')
-        localStorage.removeItem('pendingPortfolio')
       }
 
       const { data: profile } = await supabase

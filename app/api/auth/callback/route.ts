@@ -26,14 +26,6 @@ export async function GET(request: Request) {
       let finalProfession = null
 
       if (!profile) {
-        const name = user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم جديد'
-        await supabase.from('profiles').insert({
-          id: user.id,
-          full_name: name,
-          email: user.email,
-          role: role,
-          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        })
         needsCompletion = true
       } else {
         finalRole = profile.role || role

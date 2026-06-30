@@ -188,3 +188,136 @@ CREATE POLICY "Users can update own addresses"
 CREATE POLICY "Users can delete own addresses"
   ON public.addresses FOR DELETE
   USING (auth.uid() = user_id);
+
+-- ============================================
+-- 10. WORKER SCHEDULE TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.worker_schedule (
+  worker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  day_id TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  start_time TIME NOT NULL DEFAULT '09:00:00',
+  end_time TIME NOT NULL DEFAULT '17:00:00',
+  PRIMARY KEY (worker_id, day_id)
+);
+
+ALTER TABLE public.worker_schedule ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read worker schedule"
+  ON public.worker_schedule FOR SELECT
+  USING (true);
+
+CREATE POLICY "Workers can manage own schedule"
+  ON public.worker_schedule FOR ALL
+  USING (auth.uid() = worker_id);
+
+-- ============================================
+-- 11. UPDATE TRANSACTIONS CHECK CONSTRAINT
+-- ============================================
+ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_type_check;
+ALTER TABLE public.transactions ADD CONSTRAINT transactions_type_check CHECK (type IN ('deposit', 'payment', 'refund', 'withdrawal'));
+
+-- ============================================
+-- 12. PASSWORD RESET OTPS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.password_reset_otps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  otp TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.password_reset_otps ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- 13. ADDITIONAL COLUMNS FOR PROFILES
+-- ============================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'unverified';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS selfie_url TEXT;
+
+-- ============================================
+-- 14. ADDITIONAL COLUMNS FOR BOOKINGS (TRACKING)
+-- ============================================
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS tracking_status TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS eta TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS craftsman_lat NUMERIC;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS craftsman_lng NUMERIC;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS status_notes TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS work_progress TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
+
+-- ============================================
+-- 15. WITHDRAWAL METHODS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.withdrawal_methods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  worker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('vodafone_cash', 'bank_account')),
+  account_number TEXT NOT NULL,
+  bank_name TEXT,
+  holder_name TEXT NOT NULL,
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.withdrawal_methods ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read withdrawal methods"
+  ON public.withdrawal_methods FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can manage own withdrawal methods"
+  ON public.withdrawal_methods FOR ALL
+  USING (auth.uid() = worker_id);
+
+-- ============================================
+-- 16. ADDITIONAL COLUMNS FOR SERVICES (CATALOG)
+-- ============================================
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS price_range TEXT;
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS duration TEXT;
+
+-- ============================================
+-- 17. EMERGENCIES TABLE POLICIES
+-- ============================================
+ALTER TABLE public.emergencies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read emergencies"
+  ON public.emergencies FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can insert emergencies"
+  ON public.emergencies FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Workers can update emergencies"
+  ON public.emergencies FOR UPDATE
+  USING (true);
+
+CREATE TABLE IF NOT EXISTS public.messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.admin_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  receiver_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.admin_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all admin_messages" ON public.admin_messages;
+CREATE POLICY "Allow all admin_messages" ON public.admin_messages FOR ALL USING (true);

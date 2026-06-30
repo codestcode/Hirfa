@@ -99,15 +99,17 @@ export default function CraftsmanVerifyPage() {
 
   const isValid = slots.selfie.preview && slots.idFront.preview && slots.idBack.preview && slots.portfolio.preview
 
-  const handlePick = (slot: UploadSlot, file: File) => {
-    const reader = new FileReader()
-    reader.onload = ev => {
+  const handlePick = async (slot: UploadSlot, file: File) => {
+    try {
+      const { compressImage } = await import('@/components/shared/compressImage')
+      const preview = await compressImage(file)
       setSlots(prev => ({
         ...prev,
-        [slot]: { preview: ev.target?.result as string, fileName: file.name },
+        [slot]: { preview, fileName: file.name },
       }))
+    } catch (err) {
+      console.error('Failed to compress image', err)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleNext = async () => {
@@ -138,6 +140,12 @@ export default function CraftsmanVerifyPage() {
     const password = localStorage.getItem('pendingPassword') || ''
     const name = localStorage.getItem('pendingName') || ''
 
+    if (!password) {
+      setError('كلمة المرور مفقودة. الرجاء العودة للصفحة الأولى وكتابتها مجدداً.')
+      setIsLoading(false)
+      return
+    }
+
     const res = await fetch('/api/auth/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -152,6 +160,13 @@ export default function CraftsmanVerifyPage() {
           governorate: localStorage.getItem('pendingGovernorate') || null,
           area: localStorage.getItem('pendingArea') || null,
           profession: localStorage.getItem('pendingProfession') || null,
+          address_gps: (localStorage.getItem('pendingLat') && localStorage.getItem('pendingLng')) 
+            ? `${localStorage.getItem('pendingLat')},${localStorage.getItem('pendingLng')}` 
+            : null,
+          avatar_url: slots.selfie.preview,
+          id_front_url: slots.idFront.preview,
+          id_back_url: slots.idBack.preview,
+          portfolio_urls: [slots.portfolio.preview]
         }
       })
     })
@@ -176,6 +191,8 @@ export default function CraftsmanVerifyPage() {
     localStorage.removeItem('pendingArea')
     localStorage.removeItem('pendingProfession')
     localStorage.removeItem('pendingExperience')
+    localStorage.removeItem('pendingLat')
+    localStorage.removeItem('pendingLng')
 
     router.push(`/otp?email=${encodeURIComponent(email)}&role=craftsman`)
   }

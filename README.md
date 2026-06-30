@@ -112,6 +112,74 @@ One-tap emergency booking that auto-fills user address and creates an urgent ord
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- pnpm (recommended) or npm/yarn
+- Supabase account & project
+
+### ⚙️ Environment Variables
+
+Create a `.env` or `.env.local` file in the root directory and add the following keys:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# SMTP Configuration for Emails
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_email_password
+SMTP_FROM=noreply@example.com
+
+# Map Integrations
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```
+
+### 💻 Installation & Local Development
+
+1. Clone the repository and install dependencies:
+```bash
+git clone https://github.com/your-username/Hirfa.git
+cd Hirfa
+pnpm install
+```
+
+2. Start the development server:
+```bash
+pnpm run dev
+```
+
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 📱 Mobile App (Capacitor)
+
+Hirfa is built as a mobile-first application and can be compiled into a native Android app using Capacitor.
+
+### Build the Android App
+
+1. Build the Next.js web application:
+```bash
+pnpm run build
+```
+
+2. Sync the web assets with the Capacitor Android project:
+```bash
+npx cap sync android
+```
+
+3. Open the project in Android Studio (or build via CLI):
+```bash
+npx cap open android
+```
+Alternatively, you can use the provided `./build_apk.sh` script to automate the APK generation process on Linux environments.
+
 ---
 
 ## 📄 License

@@ -23,6 +23,9 @@ export interface Profile {
   response_rate?: number | null
   is_available?: boolean | null
   verified?: boolean
+  verification_status?: string | null
+  rejection_reason?: string | null
+  selfie_url?: string | null
   created_at: string
   updated_at: string
 }

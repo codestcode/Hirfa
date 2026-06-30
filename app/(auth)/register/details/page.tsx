@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { Briefcase, Clock, Building2, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
+import LocationPicker from '@/components/shared/LocationPicker'
+
 const GOVERNORATES = [
   'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'البحيرة', 'الشرقية',
   'المنوفية', 'الغربية', 'كفر الشيخ', 'دمياط', 'بورسعيد', 'الإسماعيلية',
@@ -151,6 +153,15 @@ export default function CraftsmanDetailsPage() {
               <Clock size={18} className="text-[#4B5A7A] flex-shrink-0" />
             </div>
           </div>
+
+          <LocationPicker 
+            onLocationSelected={(data) => {
+              if (data.governorate) setGovernorate(data.governorate)
+              if (data.area) setArea(data.area)
+              if (data.lat) localStorage.setItem('pendingLat', data.lat.toString())
+              if (data.lng) localStorage.setItem('pendingLng', data.lng.toString())
+            }}
+          />
 
           <div>
             <label className="text-[13px] font-semibold leading-5 text-white mb-2 block">

@@ -27,8 +27,23 @@ export function useCategoryWorkers(categoryId: string) {
 
   const fetchWorkers = useCallback(async () => {
     setLoading(true)
+    const HARDCODED_CATEGORIES = [
+      { id: 'painting', label_ar: 'دهان' },
+      { id: 'carpentry', label_ar: 'نجارة' },
+      { id: 'plumbing', label_ar: 'سباكة' },
+      { id: 'electricity', label_ar: 'كهرباء' },
+    ]
+
+    let label = ''
     const { data: cat } = await supabase.from('categories').select('label_ar').eq('id', categoryId).single()
-    if (cat) setCategoryName(cat.label_ar)
+    if (cat?.label_ar) {
+      label = cat.label_ar
+    } else {
+      const hc = HARDCODED_CATEGORIES.find(c => c.id === categoryId)
+      if (hc) label = hc.label_ar
+    }
+
+    if (label) setCategoryName(label)
 
     let query = supabase
       .from('profiles')
@@ -37,8 +52,10 @@ export function useCategoryWorkers(categoryId: string) {
       .eq('verified', true)
       .eq('is_available', true)
 
-    if (cat?.label_ar) {
-      query = query.eq('profession', cat.label_ar)
+    if (label) {
+      query = query.eq('profession', label)
+    } else if (categoryId && categoryId !== 'all') {
+      query = query.eq('profession', categoryId)
     }
 
     const { data: workersData } = await query

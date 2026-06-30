@@ -9,8 +9,9 @@ import { useCraftsmanProfile } from '@/hooks/useCraftsmanProfile'
 export default function CraftsmanPage() {
   const router = useRouter()
   const params = useParams()
-  const { profile, gallery, reviews, loading } = useCraftsmanProfile(params.id as string)
+  const { profile, gallery, services, reviews, loading } = useCraftsmanProfile(params.id as string)
   const [modalIndex, setModalIndex] = useState<number | null>(null)
+  const [selectedService, setSelectedService] = useState<any>(null)
 
   if (loading) {
     return (
@@ -60,10 +61,10 @@ export default function CraftsmanPage() {
           <p className="text-[#C7C5CF] text-base mt-1">{profile.profession || 'حرفي'}</p>
         </div>
 
-        {profile.address && (
+        {(profile.governorate || profile.area || profile.address) && (
           <div className="mt-6 flex items-center justify-center gap-2 text-[#C7C5CF] text-sm">
             <MapPin size={16} className="text-[#FF8A00]" />
-            <span>{profile.address}</span>
+            <span>{[profile.governorate, profile.area, profile.address].filter(Boolean).join(' - ')}</span>
           </div>
         )}
 
@@ -80,6 +81,62 @@ export default function CraftsmanPage() {
             <p className="text-white font-bold">⭐ {profile.rating || 0}</p>
             <p className="text-white/70 text-sm">التقييم</p>
           </div>
+        </div>
+
+        {/* Services Catalog (Food-delivery application style) */}
+        <div className="mt-8">
+          <h3 className="text-white font-bold text-base mb-4 block text-right">كتالوج الخدمات</h3>
+          {services && services.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {services.map(service => {
+                const isSelected = selectedService?.id === service.id
+                return (
+                  <div 
+                    key={service.id}
+                    onClick={() => setSelectedService(isSelected ? null : service)}
+                    className={`bg-[#0C1222] border rounded-2xl p-4 flex items-start justify-between cursor-pointer transition-all active:scale-[0.99] ${
+                      isSelected ? 'border-[#FF8A00] bg-[#FF8A00]/5' : 'border-white/5'
+                    }`}
+                  >
+                    <div className="flex-1 pr-1 text-right flex flex-col gap-1">
+                      <span className="font-bold text-sm text-white">{service.name}</span>
+                      {service.description && (
+                        <p className="text-[#C7C5CF] text-xs leading-5">{service.description}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-3 mt-2">
+                        {service.duration && (
+                          <span className="text-[10px] bg-white/5 text-[#94A3B8] px-2 py-0.5 rounded-md font-medium">
+                            ⏳ {service.duration}
+                          </span>
+                        )}
+                        {service.price_range ? (
+                          <span className="text-[10px] bg-[#FF8A00]/10 text-[#FF8A00] px-2 py-0.5 rounded-md font-bold">
+                            {service.price_range}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-[#FF8A00]/10 text-[#FF8A00] px-2 py-0.5 rounded-md font-bold">
+                            {service.price} ج.م
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center mr-4 self-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
+                        isSelected ? 'bg-[#FF8A00] text-white' : 'bg-white/10 text-white hover:bg-[#FF8A00]/20'
+                      }`}>
+                        {isSelected ? '✓' : '+'}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-[#0C1222]/50 rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center">
+              <span className="text-xs text-[#6B7A99]">لا توجد خدمات محددة في الكتالوج حالياً.</span>
+            </div>
+          )}
         </div>
 
         {gallery.length > 0 && (
@@ -222,10 +279,16 @@ export default function CraftsmanPage() {
       <div className="fixed bottom-28 left-0 right-0 bg-[#020617] backdrop-blur-lg border-t border-white/5 p-4">
         <div className="max-w-[512px] mx-auto">
           <button
-            onClick={() => router.push(`/client/booking/${params.id}`)}
+            onClick={() => {
+              let url = `/client/booking/${params.id}`
+              if (selectedService) {
+                url += `?serviceName=${encodeURIComponent(selectedService.name)}&servicePrice=${selectedService.price}`
+              }
+              router.push(url)
+            }}
             className="w-full py-4 rounded-xl bg-gradient-to-l from-[#FF8A00] to-[#FFB800] text-white text-xl font-medium shadow-lg shadow-[#FF8A00]/20"
           >
-            احجز الان
+            {selectedService ? `حجز ${selectedService.name}` : 'احجز الان'}
           </button>
         </div>
       </div>

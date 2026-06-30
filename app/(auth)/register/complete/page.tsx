@@ -72,16 +72,21 @@ export function CompleteOAuthPage() {
     }
 
     const updates: any = {
+      id: user.id,
       phone,
       governorate,
       area,
+      role,
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم جديد',
+      email: user.email,
+      avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
     }
 
     if (isWorker) {
       updates.profession = profession
     }
 
-    const { error: updateError } = await supabase.from('profiles').update(updates).eq('id', user.id)
+    const { error: updateError } = await supabase.from('profiles').upsert(updates)
 
     if (updateError) {
       setError('حدث خطأ أثناء حفظ البيانات.')

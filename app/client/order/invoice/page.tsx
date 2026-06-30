@@ -158,15 +158,24 @@ function InvoiceContent() {
       )}
 
       {/* Bottom Button */}
-      {!error && (
+      {!error && booking && (
         <div className="fixed bottom-[80px] left-0 right-0 z-40 bg-[#050B2C]/60 backdrop-blur-md">
           <div className="max-w-[512px] mx-auto px-4 py-4">
-            <button
-              onClick={() => router.push(`/client/rate-review/${bookingId}`)}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FF8A00] to-[#FFB800] text-white text-xl font-bold shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20)]"
-            >
-              إنهاء الطلب وتقييم الحرفي
-            </button>
+            {booking.status === 'closed' ? (
+              <button
+                onClick={() => router.push('/client/home')}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FF8A00] to-[#FFB800] text-white text-xl font-bold shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20)]"
+              >
+                العودة للرئيسية
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push(`/client/rate-review/${bookingId}`)}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FF8A00] to-[#FFB800] text-white text-xl font-bold shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20)]"
+              >
+                إنهاء الطلب وتقييم الحرفي
+              </button>
+            )}
           </div>
         </div>
       )}

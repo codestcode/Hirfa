@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { CalendarDays, Clock, MapPin, CheckCircle2, XCircle, User } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, User, ChevronLeft } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SubPageLayout } from '@/components/ui/SubPageLayout'
 import { PageLoader } from '@/components/ui/PageLoader'
+import { BookingStatusBadge } from '@/components/ui/BookingStatusBadge'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
-import { createNotification } from '@/lib/notifications'
+import Link from 'next/link'
 
 export default function WorkerSchedulePage() {
   const { profile } = useAuth()
@@ -39,49 +40,17 @@ export default function WorkerSchedulePage() {
     fetchBookings()
   }, [fetchBookings])
 
-  const updateStatus = async (bookingId: string, status: string, clientId: string, serviceName: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Notify the client
-      if (status === 'completed') {
-        await createNotification(
-          clientId,
-          'اكتملت الخدمة',
-          `تم إكمال خدمة ${serviceName} بواسطة الحرفي بنجاح.`
-        )
-      } else if (status === 'cancelled') {
-        await createNotification(
-          clientId,
-          'تم إلغاء الموعد',
-          `تم إلغاء موعد خدمة ${serviceName} بواسطة الحرفي.`
-        )
-      }
-
-      fetchBookings()
-    } catch (err) {
-      alert('فشل تحديث حالة الطلب')
-    }
-  }
-
   const filteredBookings = bookings.filter(b => {
     if (filter === 'all') return true
     if (filter === 'completed') return b.status === 'completed'
-    // 'upcoming' includes both 'confirmed' and 'pending'
     return b.status === 'confirmed' || b.status === 'pending'
   })
 
   return (
     <SubPageLayout>
       <PageHeader title="جدول المواعيد والحجوزات" isTransparent />
-      <div className="px-6 py-4">
+      <div className="px-6 py-4 pb-24">
         
-        {/* Navigation Tabs */}
         <div className="flex bg-[#0A0D1A] rounded-2xl p-1 mb-6 border border-white/5">
           {[
             { id: 'upcoming' as const, label: 'القادمة' },
@@ -102,17 +71,17 @@ export default function WorkerSchedulePage() {
           ))}
         </div>
 
-        {/* Bookings List */}
         <div className="flex flex-col gap-4">
           {loading ? (
             <PageLoader />
           ) : filteredBookings.length ? (
             filteredBookings.map((booking) => (
-              <div 
+              <Link
+                href={`/worker/booking/${booking.id}`}
                 key={booking.id} 
-                className="bg-[#0A0D1A] border border-white/5 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden hover:border-white/10 transition-colors"
+                className="bg-[#0A0D1A] border border-white/5 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden hover:border-white/10 transition-colors cursor-pointer group"
               >
-                <div className={`absolute top-0 right-0 w-1.5 h-full ${
+                <div className={`absolute top-0 right-0 w-1.5 h-full transition-colors ${
                   booking.status === 'completed' 
                     ? 'bg-[#4ADE80]' 
                     : booking.status === 'cancelled' 
@@ -122,7 +91,7 @@ export default function WorkerSchedulePage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1E2538] flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 rounded-full bg-[#1E2538] flex items-center justify-center text-white font-bold group-hover:scale-105 transition-transform">
                       <User size={16} />
                     </div>
                     <div className="flex flex-col">
@@ -131,26 +100,10 @@ export default function WorkerSchedulePage() {
                     </div>
                   </div>
                   
-                  {booking.status === 'completed' && (
-                    <span className="text-[10px] font-bold bg-[#4ADE80]/10 text-[#4ADE80] px-2.5 py-1 rounded-full flex items-center gap-1">
-                      <CheckCircle2 size={10} /> مكتمل
-                    </span>
-                  )}
-                  {booking.status === 'cancelled' && (
-                    <span className="text-[10px] font-bold bg-red-500/10 text-red-400 px-2.5 py-1 rounded-full flex items-center gap-1">
-                      <XCircle size={10} /> ملغي
-                    </span>
-                  )}
-                  {booking.status === 'confirmed' && (
-                    <span className="text-[10px] font-bold bg-[#FF8A00]/10 text-[#FF8A00] px-2.5 py-1 rounded-full">
-                      مؤكد
-                    </span>
-                  )}
-                  {booking.status === 'pending' && (
-                    <span className="text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2.5 py-1 rounded-full">
-                      انتظار التأكيد
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <BookingStatusBadge status={booking.status} />
+                    <ChevronLeft size={16} className="text-[#6B7A99] mr-1" />
+                  </div>
                 </div>
 
                 <div className="bg-[#1E2538]/30 rounded-xl p-3 flex flex-col gap-2 mt-1">
@@ -169,33 +122,10 @@ export default function WorkerSchedulePage() {
                   
                   <div className="flex items-center gap-2 text-xs text-[#94A3B8] text-right">
                     <MapPin size={14} className="shrink-0" />
-                    <span>{booking.address || 'عنوان غير محدد'}</span>
+                    <span className="truncate">{booking.address?.split('|')[0] || 'عنوان غير محدد'}</span>
                   </div>
-                  {booking.notes && (
-                    <p className="text-[11px] text-[#6B7A99] mt-1 text-right">
-                      <strong>ملاحظات العميل:</strong> {booking.notes}
-                    </p>
-                  )}
                 </div>
-
-                {/* Booking Status Action Buttons */}
-                {(booking.status === 'confirmed' || booking.status === 'pending') && (
-                  <div className="flex gap-2.5 mt-2">
-                    <button
-                      onClick={() => updateStatus(booking.id, 'completed', booking.client_id, booking.service_name)}
-                      className="flex-1 bg-gradient-to-r from-[#22C55E]/90 to-[#22C55E] text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.98] transition-all"
-                    >
-                      <CheckCircle2 size={13} /> إكمال الخدمة
-                    </button>
-                    <button
-                      onClick={() => updateStatus(booking.id, 'cancelled', booking.client_id, booking.service_name)}
-                      className="flex-1 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-red-500/20 active:scale-[0.98] transition-all"
-                    >
-                      <XCircle size={13} /> إلغاء الموعد
-                    </button>
-                  </div>
-                )}
-              </div>
+              </Link>
             ))
           ) : (
             <div className="text-center py-16 bg-[#0A0D1A] rounded-3xl border border-dashed border-white/5 flex flex-col items-center justify-center">

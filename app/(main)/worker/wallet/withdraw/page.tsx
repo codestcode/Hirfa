@@ -27,6 +27,38 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  
+  const [savedMethods, setSavedMethods] = useState<any[]>([])
+  const [selectedMethodId, setSelectedMethodId] = useState<string>('')
+
+  React.useEffect(() => {
+    async function loadWithdrawalMethods() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('withdrawal_methods')
+          .select('*')
+          .eq('worker_id', user.id)
+          .order('is_default', { ascending: false })
+        if (data) {
+          setSavedMethods(data)
+          if (data.length > 0) {
+            setSelectedMethodId(data[0].id)
+            const def = data[0]
+            setMethod(def.type === 'vodafone_cash' ? 'vodafone' : 'bank')
+            if (def.type === 'vodafone_cash') {
+              setPhone(def.account_number)
+            } else {
+              setBankName(def.bank_name || '')
+              setAccountHolder(def.holder_name)
+              setAccountNumber(def.account_number)
+            }
+          }
+        }
+      }
+    }
+    loadWithdrawalMethods()
+  }, [supabase])
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,6 +167,61 @@ export default function WithdrawPage() {
               </div>
               <div className="bg-[#4ADE80]/10 text-[#4ADE80] text-xs px-3 py-1.5 rounded-full font-bold">رصيد كافي</div>
             </div>
+
+            {/* Saved Withdrawal Methods */}
+            {savedMethods.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-[#E4E1E5] text-right">اختر من طرق السحب المحفوظة</label>
+                <div className="flex flex-col gap-2.5">
+                  {savedMethods.map(m => {
+                    const isSel = selectedMethodId === m.id
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedMethodId(m.id)
+                          setMethod(m.type === 'vodafone_cash' ? 'vodafone' : 'bank')
+                          if (m.type === 'vodafone_cash') {
+                            setPhone(m.account_number)
+                          } else {
+                            setBankName(m.bank_name || '')
+                            setAccountHolder(m.holder_name)
+                            setAccountNumber(m.account_number)
+                          }
+                        }}
+                        className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                          isSel ? 'border-[#FF8A00] bg-[#FF8A00]/5' : 'border-white/5 bg-white/3'
+                        }`}
+                      >
+                        <span className="text-xs text-white/50">{m.type === 'vodafone_cash' ? 'فودافون كاش' : m.bank_name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col text-right">
+                            <span className="text-xs font-bold text-white">{m.holder_name}</span>
+                            <span className="text-[10px] text-[#6B7A99] mt-0.5">{m.account_number}</span>
+                          </div>
+                          {m.type === 'vodafone_cash' ? <Phone size={16} className="text-[#FF8A00]" /> : <Landmark size={16} className="text-[#FFB800]" />}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div
+                    onClick={() => {
+                      setSelectedMethodId('manual')
+                      setPhone('')
+                      setBankName('')
+                      setAccountHolder('')
+                      setAccountNumber('')
+                    }}
+                    className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                      selectedMethodId === 'manual' ? 'border-[#FF8A00] bg-[#FF8A00]/5' : 'border-white/5 bg-white/3'
+                    }`}
+                  >
+                    <span className="text-xs text-white/50">إدخال يدوي</span>
+                    <span className="text-xs font-bold text-white">طريقة سحب أخرى (كتابة يدوية)</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Amount Field */}
             <div className="flex flex-col gap-2">

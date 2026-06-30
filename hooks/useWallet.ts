@@ -10,7 +10,11 @@ export function useWallet() {
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('bookings').select('*, client:client_id(*)').eq('worker_id', profile?.id).eq('status', 'completed').order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', profile?.id)
+      .order('created_at', { ascending: false })
     if (data) setTransactions(data)
     setLoading(false)
   }, [profile?.id, supabase])
@@ -19,7 +23,7 @@ export function useWallet() {
     if (profile) fetchTransactions()
   }, [profile, fetchTransactions])
 
-  const availableBalance = (profile?.total_earnings || 0) * 0.9
+  const availableBalance = profile?.wallet_balance || 0
 
   return { profile, transactions, loading, availableBalance }
 }

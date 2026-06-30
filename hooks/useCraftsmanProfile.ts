@@ -29,6 +29,10 @@ export interface WorkerServiceItem {
   id: string
   name: string
   price: number
+  description?: string | null
+  price_range?: string | null
+  duration?: string | null
+  icon?: string | null
 }
 
 export interface ReviewItem {
@@ -52,7 +56,7 @@ export function useCraftsmanProfile(workerId: string) {
 
     const [profRes, servRes, galleryRes] = await Promise.all([
       supabase.from('profiles').select('id, full_name, avatar_url, profession, rating, completed_orders, is_available, verified, governorate, area, phone').eq('id', workerId).single(),
-      supabase.from('services').select('id, name, price').eq('craftsman_id', workerId).order('price', { ascending: true }),
+      supabase.from('services').select('id, name, price, description, price_range, duration, icon').eq('craftsman_id', workerId).order('price', { ascending: true }),
       supabase.from('worker_gallery').select('id, before_url, after_url, title').eq('worker_id', workerId).order('created_at', { ascending: false })
     ])
 

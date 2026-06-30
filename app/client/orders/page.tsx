@@ -29,9 +29,9 @@ const TABS: { key: TabKey; label: string }[] = [
 ]
 
 const STATUS_MAP: Record<TabKey, string[]> = {
-  all: ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'],
+  all: ['pending', 'confirmed', 'in_progress', 'completed', 'closed', 'cancelled'],
   in_progress: ['confirmed', 'in_progress'],
-  completed: ['completed'],
+  completed: ['completed', 'closed'],
   cancelled: ['cancelled'],
 }
 
@@ -39,7 +39,8 @@ const STATUS_STYLES: Record<string, { label: string; color: string }> = {
   pending: { label: 'انتظار', color: '#FFA504' },
   confirmed: { label: 'قيد التنفيذ', color: '#3854CD' },
   in_progress: { label: 'قيد التنفيذ', color: '#3854CD' },
-  completed: { label: 'مكتمل', color: '#22C55E' },
+  completed: { label: 'مكتمل (بانتظار التقييم)', color: '#22C55E' },
+  closed: { label: 'مكتمل ومقيم', color: '#22C55E' },
   cancelled: { label: 'ملغاة', color: '#EF4444' },
 }
 
@@ -136,6 +137,8 @@ export default function OrdersPage() {
                   className="bg-[#0F172A]/60 rounded-2xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow-[0_4px_12px_rgba(5,11,44,0.08)]"
                   onClick={() => {
                     const target = booking.status === 'completed'
+                      ? `/client/rate-review/${booking.id}`
+                      : booking.status === 'closed'
                       ? `/client/order/invoice?id=${booking.id}`
                       : `/client/order/success?id=${booking.id}`
                     router.push(target)

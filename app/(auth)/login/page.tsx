@@ -181,10 +181,15 @@ function LoginPageContent() {
                 setIsLoading(true)
                 const { createClient } = await import('@/lib/supabase/client')
                 const supabase = createClient()
+                const { Capacitor } = await import('@capacitor/core')
+                const isNative = Capacitor.isNativePlatform()
+                
                 const { error } = await supabase.auth.signInWithOAuth({
                   provider: 'google',
                   options: {
-                    redirectTo: `${window.location.origin}/api/auth/callback?role=${role}`
+                    redirectTo: isNative 
+                      ? `hirfa://api/auth/callback?role=${role}`
+                      : `${window.location.origin}/api/auth/callback?role=${role}`
                   }
                 })
                 if (error) throw error

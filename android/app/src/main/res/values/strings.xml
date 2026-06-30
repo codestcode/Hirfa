@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hirfa</string>
+    <string name="title_activity_main">Hirfa</string>
+    <string name="package_name">com.hirfa.app</string>
+    <string name="custom_url_scheme">com.hirfa.app</string>
+</resources>

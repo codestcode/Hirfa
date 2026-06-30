@@ -43,6 +43,7 @@ export default function MessagesPage() {
             clientAvatar={conv.client?.avatar_url}
             lastMessage={conv.last_message}
             lastMessageAt={conv.last_message_at}
+            basePath="/worker/messages"
           />
         )) : (
           <div className="bg-[#0A0D1A] rounded-2xl p-10 flex flex-col items-center justify-center border border-white/5 text-[#6B7A99]">

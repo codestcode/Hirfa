@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Cairo, Plus_Jakarta_Sans } from 'next/font/google'
 import { QueryProvider } from '@/components/QueryProvider'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { CapacitorListener } from '@/components/shared/CapacitorListener'
+import { PushNotificationListener } from '@/components/shared/PushNotificationListener'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -61,6 +63,8 @@ export default function RootLayout({
       <body suppressHydrationWarning className="font-sans antialiased" style={{ backgroundColor: "rgb(0, 4, 25)", color: "rgba(179, 197, 255, 0.8)" }}>
         <QueryProvider>
           <AuthProvider>
+            <CapacitorListener />
+            <PushNotificationListener />
             {children}
           </AuthProvider>
         </QueryProvider>
