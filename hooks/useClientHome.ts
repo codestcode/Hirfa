@@ -41,6 +41,7 @@ export function useClientHome() {
         .select('id, full_name, avatar_url, profession, rating, completed_orders, is_available, governorate, area')
         .eq('role', 'worker')
         .eq('verified', true)
+        .eq('verification_status', 'verified')
         .eq('is_available', true)
         .order('rating', { ascending: false })
         .limit(50)

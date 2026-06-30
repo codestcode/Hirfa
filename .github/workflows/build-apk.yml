@@ -37,6 +37,7 @@ jobs:
         run: pnpm install
 
       - name: Build Next.js app
+<<<<<<< HEAD
         run: |
           # Ensure Next.js builds as a static export
           if ! grep -q "output: 'export'" next.config.mjs; then
@@ -64,6 +65,17 @@ jobs:
           # Add and sync the android platform
           rm -rf android # Remove the broken or incomplete android folder
           npx cap add android
+=======
+        run: pnpm run build
+        env:
+          # Add any environment variables needed for the build here
+          NODE_ENV: production
+
+      - name: Sync Capacitor Android
+        run: |
+          mkdir -p android/app/src/main/assets/public
+          npx cap sync android
+>>>>>>> 12b26fde93279a95bad56583bdd00a1a39766d7d
 
       - name: Build APK
         working-directory: ./android

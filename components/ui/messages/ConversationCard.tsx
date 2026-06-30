@@ -9,11 +9,12 @@ interface ConversationCardProps {
   clientAvatar?: string
   lastMessage: string
   lastMessageAt: string
+  basePath?: string
 }
 
-export function ConversationCard({ id, clientName, clientAvatar, lastMessage, lastMessageAt }: ConversationCardProps) {
+export function ConversationCard({ id, clientName, clientAvatar, lastMessage, lastMessageAt, basePath = '/messages' }: ConversationCardProps) {
   return (
-    <Link href={`/messages/${id}`} className="bg-[#0A0D1A] rounded-2xl p-4 border border-white/5 flex items-center gap-4 hover:bg-[#0F1322] transition-colors">
+    <Link href={`${basePath}/${id}`} className="bg-[#0A0D1A] rounded-2xl p-4 border border-white/5 flex items-center gap-4 hover:bg-[#0F1322] transition-colors">
       <div className="relative shrink-0">
         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#1E2538] bg-[#1E2538]">
           <Image src={clientAvatar || "/client_avatar.png"} alt="Client" fill className="object-cover" />

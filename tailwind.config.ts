@@ -108,6 +108,16 @@ const config = {
         'gradient-primary-horizontal': 'linear-gradient(90deg, #ff8a00 0%, #ffb800 100%)',
         'gradient-dark': 'linear-gradient(90deg, rgb(0, 4, 25) 0%, rgb(0, 4, 25) 100%)',
       },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+        'radar-sweep': 'radar-sweep 2s linear infinite',
+      },
+      keyframes: {
+        'radar-sweep': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
+      },
     },
   },
   plugins: [],

@@ -30,6 +30,11 @@ export function useOrders() {
       .eq('id', id)
       .single()
 
+    if (status === 'completed') {
+      const { processBookingCompletion } = await import('@/lib/supabase/booking-payments')
+      await processBookingCompletion(supabase, id)
+    }
+
     await supabase.from('bookings').update({ status }).eq('id', id)
 
     if (booking) {
@@ -45,5 +50,66 @@ export function useOrders() {
     fetchOrders()
   }
 
-  return { activeTab, setActiveTab, orders, loading, updateStatus }
+  const updateTracking = async (
+    id: string, 
+    tracking_status: string, 
+    eta?: string | null, 
+    status_notes?: string | null, 
+    work_progress?: string | null
+  ) => {
+    const { data: currentBooking } = await supabase.from('bookings').select('status_history, client_id, service_name').eq('id', id).single()
+    const currentHistory = Array.isArray(currentBooking?.status_history) ? currentBooking.status_history : []
+    const newHistoryEntry = {
+      tracking_status,
+      eta: eta || null,
+      notes: status_notes || null,
+      work_progress: work_progress || null,
+      timestamp: new Date().toISOString()
+    }
+    
+    const updates: any = { 
+      tracking_status,
+      status_history: [...currentHistory, newHistoryEntry]
+    }
+    if (eta !== undefined) updates.eta = eta
+    if (status_notes !== undefined) updates.status_notes = status_notes
+    if (work_progress !== undefined) updates.work_progress = work_progress
+
+    if (tracking_status === 'completed') {
+      const { processBookingCompletion } = await import('@/lib/supabase/booking-payments')
+      await processBookingCompletion(supabase, id)
+      await supabase.from('bookings').update({ status: 'completed', ...updates }).eq('id', id)
+      
+      const { data: booking } = await supabase.from('bookings').select('client_id').eq('id', id).single()
+      if (booking) {
+        createNotification(booking.client_id, 'تم إكمال طلب الخدمة', 'تم إكمال طلب الخدمة بنجاح، يمكنك تقييم الحرفي الآن')
+      }
+    } else {
+      await supabase.from('bookings').update(updates).eq('id', id)
+      
+      const booking = currentBooking
+      if (booking) {
+        let label = 'تحديث حالة الطلب'
+        let msg = `قام الحرفي بتحديث حالة طلب ${booking.service_name}`
+        if (tracking_status === 'preparing_to_leave') {
+          label = 'تجهيز للتحرك'
+          msg = `قام الحرفي بالتجهيز للتحرك للطلب الخاص بك`
+        } else if (tracking_status === 'on_the_way') {
+          label = 'الحرفي في الطريق'
+          msg = `الحرفي في الطريق إليك الآن.`
+          if (eta) msg += ` الوقت المقدر للوصول: ${eta}`
+        } else if (tracking_status === 'arrived') {
+          label = 'وصل الحرفي'
+          msg = `وصل الحرفي لموقع العمل.`
+        } else if (tracking_status === 'work_started') {
+          label = 'بدء العمل'
+          msg = `بدأ الحرفي في تنفيذ الخدمة المطلوبة.`
+        }
+        createNotification(booking.client_id, label, msg)
+      }
+    }
+    fetchOrders()
+  }
+
+  return { activeTab, setActiveTab, orders, loading, updateStatus, updateTracking }
 }

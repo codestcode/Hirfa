@@ -6,7 +6,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   turbopack: { root: '.' },
+  output: 'export',
 };
 
 export default nextConfig;

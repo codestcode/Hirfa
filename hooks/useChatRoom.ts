@@ -12,7 +12,7 @@ export function useChatRoom(conversationId: string) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const fetchData = useCallback(async () => {
-    const { data: conv } = await supabase.from('conversations').select('*, client:client_id(*)').eq('id', conversationId).single()
+    const { data: conv } = await supabase.from('conversations').select('*, client:client_id(*), worker:worker_id(*)').eq('id', conversationId).single()
     if (conv) setConversation(conv)
 
     const { data: msgs } = await supabase.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true })

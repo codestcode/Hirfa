@@ -36,7 +36,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="relative max-w-[512px] mx-auto">
           {/* Navbar */}
           <div className="bg-[#020617] rounded-t-[12px] border-t border-white/5 shadow-[0_-4px_12px_rgba(5,11,44,0.08)]">
-            <div className="grid grid-cols-5 px-3 py-3">
+            <div dir="rtl" className="grid grid-cols-5 px-3 py-3">
               {/* الرئيسية */}
               <Link href="/client/home" className="flex flex-col items-center justify-center relative">
                 {isActive('/client/home') || pathname === '/' ? (

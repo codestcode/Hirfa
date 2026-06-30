@@ -36,6 +36,10 @@ function RegisterPageContent() {
     setGovernorate(localStorage.getItem('pendingGovernorate') || '')
     setArea(localStorage.getItem('pendingArea') || '')
     setAvatar(localStorage.getItem('pendingAvatar') || null)
+    
+    const savedPassword = localStorage.getItem('pendingPassword') || ''
+    setPassword(savedPassword)
+    setConfirmPassword(savedPassword)
   }, [])
 
   const [showPassword, setShowPassword] = useState(false)
@@ -131,6 +135,7 @@ function RegisterPageContent() {
       localStorage.setItem('pendingEmail', email)
       localStorage.setItem('pendingName', name)
       localStorage.setItem('pendingRole', role)
+      localStorage.setItem('pendingPassword', password)
       if (phone) localStorage.setItem('pendingPhone', phone)
       if (governorate) localStorage.setItem('pendingGovernorate', governorate)
       if (area) localStorage.setItem('pendingArea', area)
@@ -333,10 +338,15 @@ function RegisterPageContent() {
                 setIsLoading(true)
                 const { createClient } = await import('@/lib/supabase/client')
                 const supabase = createClient()
+                const { Capacitor } = await import('@capacitor/core')
+                const isNative = Capacitor.isNativePlatform()
+
                 const { error } = await supabase.auth.signInWithOAuth({
                   provider: 'google',
                   options: {
-                    redirectTo: `${window.location.origin}/api/auth/callback?role=${role}`
+                    redirectTo: isNative 
+                      ? `hirfa://api/auth/callback?role=${role}`
+                      : `${window.location.origin}/api/auth/callback?role=${role}`
                   }
                 })
                 if (error) throw error

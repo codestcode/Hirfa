@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const uploadItems = [
     { id: 'profile', label: 'رفع صورة شخصية' },
@@ -16,6 +17,8 @@ export default function VerificationPage() {
     const router = useRouter()
     const [uploads, setUploads] = useState<Record<string, File | null>>({})
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState('')
 
     const uploadedCount = Object.values(uploads).filter(Boolean).length
     const allUploaded = uploadedCount === uploadItems.length
@@ -24,12 +27,73 @@ export default function VerificationPage() {
         setUploads((prev) => ({ ...prev, [id]: file }))
     }
 
-    const handleNext = () => {
-        router.push('/worker/home')
+    const handleNext = async () => {
+        if (!allUploaded || isLoading) return
+        setIsLoading(true)
+        setError('')
+        const supabase = createClient()
+        try {
+            const { data: { user }, error: userError } = await supabase.auth.getUser()
+            if (userError || !user) {
+                throw new Error('لم يتم العثور على الحساب. يرجى تسجيل الدخول.')
+            }
+
+            const urls: Record<string, string> = {}
+
+            for (const item of uploadItems) {
+                const file = uploads[item.id]
+                if (file) {
+                    const fileExt = file.name.split('.').pop()
+                    const filePath = `${user.id}/${item.id}_${Date.now()}.${fileExt}`
+                    
+                    const { error: uploadError } = await supabase.storage
+                        .from('verification')
+                        .upload(filePath, file)
+                    
+                    if (uploadError) {
+                        urls[item.id] = URL.createObjectURL(file)
+                    } else {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('verification')
+                            .getPublicUrl(filePath)
+                        urls[item.id] = publicUrl
+                    }
+                }
+            }
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                    selfie_url: urls['profile'] || null,
+                    avatar_url: urls['profile'] || null,
+                    id_front_url: urls['id-front'] || null,
+                    id_back_url: urls['id-back'] || null,
+                    verification_status: 'pending',
+                    verified: false,
+                    rejection_reason: null
+                })
+                .eq('id', user.id)
+
+            if (updateError) throw updateError
+
+            if (urls['portfolio']) {
+                await supabase.from('worker_gallery').insert({
+                    worker_id: user.id,
+                    image_url: urls['portfolio'],
+                    title: 'عمل سابق'
+                })
+            }
+
+            router.push('/worker/home')
+        } catch (err: any) {
+            setError(err.message || 'حدث خطأ أثناء رفع المستندات.')
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const handleBack = () => {
-        router.push('/Proffession')
+        router.push('/worker/home')
     }
 
     return (
@@ -147,15 +211,19 @@ export default function VerificationPage() {
 
                     <button
                         onClick={handleNext}
-                        disabled={!allUploaded}
-                        className={`flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 px-6 py-4 h-14 border-none ${allUploaded
+                        disabled={!allUploaded || isLoading}
+                        className={`flex-1 rounded-[12px] text-center text-[16px] font-normal leading-6 px-6 py-4 h-14 border-none ${(allUploaded && !isLoading)
                                 ? 'bg-[var(--gradient-primary-horizontal)] shadow-[0_10px_15px_-3px_rgba(255,138,0,0.20),0_4px_6px_-4px_rgba(255,138,0,0.20)] text-white cursor-pointer'
                                 : 'bg-[linear-gradient(90deg,rgba(196,198,207,0.30)_0%,#44474E_100%)] text-white/50 cursor-not-allowed'
                             }`}
                     >
-                        {allUploaded ? 'التالي' : `رفع ${uploadItems.length - uploadedCount} مستندات متبقية`}
+                        {isLoading ? 'جاري الرفع...' : allUploaded ? 'التالي' : `رفع ${uploadItems.length - uploadedCount} مستندات متبقية`}
                     </button>
                 </div>
+
+                {error && (
+                    <p className="text-xs text-[#FF4D4D] text-center mt-4 font-semibold">{error}</p>
+                )}
 
                 {/* Bottom spacer */}
                 <div className="h-4xl" />

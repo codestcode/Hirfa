@@ -60,7 +60,15 @@ export default function ClientHomePage() {
     const channel = supabase.channel('notif-count').on('postgres_changes', {
       event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}`
     }, () => fetchUnread()).subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    const bookingsChannel = supabase.channel('client-bookings-sync').on('postgres_changes', {
+      event: '*', schema: 'public', table: 'bookings', filter: `client_id=eq.${profile.id}`
+    }, () => fetchStats()).subscribe()
+
+    return () => { 
+      supabase.removeChannel(channel)
+      supabase.removeChannel(bookingsChannel)
+    }
   }, [profile, supabase])
 
   const displayName = profile?.full_name || 'مستخدم'
@@ -70,14 +78,6 @@ export default function ClientHomePage() {
       <ToolSilhouettes />
       <div className="sticky top-0 z-10 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center justify-between px-4 h-20 max-w-[512px] mx-auto">
-          <Link href="/client/notifications" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center relative">
-            <Bell size={16} className="text-white" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-[#FF8A00] text-[10px] font-bold text-white flex items-center justify-center px-1 shadow-lg">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm text-[#94A3B8] font-medium">مرحباً،</p>
@@ -92,6 +92,14 @@ export default function ClientHomePage() {
               <div className="absolute -bottom-0.5 left-0 w-3.5 h-3.5 rounded-full border-2 border-[#020617] bg-green-500" />
             </div>
           </div>
+          <Link href="/client/notifications" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center relative">
+            <Bell size={16} className="text-white" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-[#FF8A00] text-[10px] font-bold text-white flex items-center justify-center px-1 shadow-lg">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 
@@ -188,6 +196,7 @@ export default function ClientHomePage() {
                         <h4 className="text-white font-semibold">{worker.full_name}</h4>
                       </div>
                       <p className="text-[#C7C5CF] text-xs mt-0.5">{worker.profession || 'حرفي'}</p>
+                      <p className="text-[#C7C5CF]/70 text-xs mt-1">{worker.governorate ? `${worker.governorate} - ${worker.area}` : 'موقع غير محدد'}</p>
                       <p className="text-[#C7C5CF]/40 text-xs mt-1">تم إنجاز {worker.completed_orders || 0} مهمة</p>
                     </div>
                   </div>

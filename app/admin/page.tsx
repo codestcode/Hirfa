@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
@@ -9,17 +8,13 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
-
 type TabType = 'overview' | 'users' | 'activations' | 'bookings' | 'emergencies' | 'categories' | 'rules' | 'messages' | 'services' | 'reviews' | 'transactions' | 'gallery' | 'notifications'
-
 export default function AdminDashboard() {
   const router = useRouter()
   const supabase = createClient()
   const { profile } = useAuth()
-  
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [loading, setLoading] = useState(true)
-  
   const [stats, setStats] = useState({
     totalClients: 0,
     totalWorkers: 0,
@@ -37,17 +32,14 @@ export default function AdminDashboard() {
   const [transactionsList, setTransactionsList] = useState<any[]>([])
   const [galleryList, setGalleryList] = useState<any[]>([])
   const [notificationsList, setNotificationsList] = useState<any[]>([])
-  
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | 'client' | 'worker' | 'admin'>('all')
-  
   const [newCatAr, setNewCatAr] = useState('')
   const [newCatEn, setNewCatEn] = useState('')
   const [newCatIcon, setNewCatIcon] = useState('')
   const [newRulePattern, setNewRulePattern] = useState('')
   const [editingSkill, setEditingSkill] = useState<{ id: string; name: string } | null>(null)
   const [newAdminEmail, setNewAdminEmail] = useState('')
-  
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [viewUserDetails, setViewUserDetails] = useState<any>(null)
   const [editUserData, setEditUserData] = useState<any>(null)
@@ -59,10 +51,10 @@ export default function AdminDashboard() {
   const [sendingMessage, setSendingMessage] = useState(false)
   const [notifTitle, setNotifTitle] = useState('')
   const [notifBody, setNotifBody] = useState('')
+  const [notifTarget, setNotifTarget] = useState<'all' | 'client' | 'worker'>('all')
   const [sendingNotif, setSendingNotif] = useState(false)
   const [editingService, setEditingService] = useState<any>(null)
   const [savingService, setSavingService] = useState(false)
-  
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
@@ -71,7 +63,6 @@ export default function AdminDashboard() {
         .select('*')
         .order('created_at', { ascending: false })
       if (pErr) throw pErr
-
       const { data: bookings, error: bErr } = await supabase
         .from('bookings')
         .select(`
@@ -81,7 +72,6 @@ export default function AdminDashboard() {
         `)
         .order('created_at', { ascending: false })
       if (bErr) throw bErr
-
       const { data: emergencies, error: eErr } = await supabase
         .from('emergencies')
         .select(`
@@ -91,44 +81,36 @@ export default function AdminDashboard() {
         `)
         .order('created_at', { ascending: false })
       if (eErr) throw eErr
-
       const { data: categories, error: cErr } = await supabase
         .from('categories')
         .select('*')
         .order('usage_count', { ascending: false })
       if (cErr) throw cErr
-
       const { data: rules, error: rErr } = await supabase
         .from('admin_rules')
         .select('*')
         .order('created_at', { ascending: false })
       if (rErr) throw rErr
-
       const { data: services } = await supabase
         .from('services')
         .select('*, worker:craftsman_id(full_name, phone)')
         .order('created_at', { ascending: false })
-
       const { data: reviews } = await supabase
         .from('reviews')
         .select('*, client:client_id(full_name), worker:craftsman_id(full_name)')
         .order('created_at', { ascending: false })
-
       const { data: transactions } = await supabase
         .from('transactions')
         .select('*, user:user_id(full_name, email)')
         .order('created_at', { ascending: false })
-
       const { data: gallery } = await supabase
         .from('worker_gallery')
         .select('*, worker:worker_id(full_name)')
         .order('created_at', { ascending: false })
-
       const { data: notifications } = await supabase
         .from('notifications')
         .select('*, user:user_id(full_name)')
         .order('created_at', { ascending: false })
-
       setProfilesList(profiles || [])
       setBookingsList(bookings || [])
       setEmergenciesList(emergencies || [])
@@ -139,12 +121,10 @@ export default function AdminDashboard() {
       setTransactionsList(transactions || [])
       setGalleryList(gallery || [])
       setNotificationsList(notifications || [])
-
       const clients = profiles?.filter(p => p.role === 'client') || []
       const workers = profiles?.filter(p => p.role === 'worker') || []
       const activeE = emergencies?.filter(e => e.status !== 'completed') || []
       const revenue = bookings?.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0) || 0
-
       setStats({
         totalClients: clients.length,
         totalWorkers: workers.length,
@@ -152,18 +132,15 @@ export default function AdminDashboard() {
         activeEmergencies: activeE.length,
         totalEarnings: revenue
       })
-
     } catch (error) {
       console.error('Error fetching admin data:', error)
     } finally {
       setLoading(false)
     }
   }, [supabase])
-
   useEffect(() => {
     fetchData()
   }, [fetchData])
-
   const verifyUser = async (userId: string) => {
     try {
       const { error } = await supabase
@@ -176,7 +153,6 @@ export default function AdminDashboard() {
       alert('فشل توثيق الحساب')
     }
   }
-
   const submitRejectUser = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!rejectUser || !rejectionReason.trim()) return
@@ -196,7 +172,6 @@ export default function AdminDashboard() {
       setIsRejecting(false)
     }
   }
-
   const saveUserData = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editUserData) return
@@ -218,7 +193,6 @@ export default function AdminDashboard() {
       setIsEditingUser(false)
     }
   }
-
   const deleteProfile = async (userId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الحساب نهائياً؟')) return
     try {
@@ -234,9 +208,12 @@ export default function AdminDashboard() {
       alert('فشل حذف الحساب')
     }
   }
-
   const updateBookingStatus = async (bookingId: string, status: string) => {
     try {
+      if (status === 'completed') {
+        const { processBookingCompletion } = await import('@/lib/supabase/booking-payments')
+        await processBookingCompletion(supabase, bookingId)
+      }
       const { error } = await supabase
         .from('bookings')
         .update({ status })
@@ -247,7 +224,6 @@ export default function AdminDashboard() {
       alert('فشل تحديث حالة الطلب')
     }
   }
-
   const addCategory = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCatAr || !newCatEn) return
@@ -266,7 +242,6 @@ export default function AdminDashboard() {
       alert('فشل إضافة القسم الجديد')
     }
   }
-
   const deleteCategory = async (id: string) => {
     if (!confirm('هل تريد حذف هذا القسم؟')) return
     try {
@@ -280,14 +255,13 @@ export default function AdminDashboard() {
       alert('فشل حذف القسم')
     }
   }
-
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser || !messageText.trim()) return
     setSendingMessage(true)
     try {
       const { error } = await supabase
-        .from('messages')
+        .from('admin_messages')
         .insert({
           sender_id: profile?.id,
           receiver_id: selectedUser.id,
@@ -303,7 +277,6 @@ export default function AdminDashboard() {
       setSendingMessage(false)
     }
   }
-
   const addRule = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newRulePattern.trim()) return
@@ -318,7 +291,6 @@ export default function AdminDashboard() {
       alert('فشل إضافة القاعدة')
     }
   }
-
   const deleteRule = async (id: string) => {
     if (!confirm('هل تريد حذف هذه القاعدة؟')) return
     try {
@@ -332,13 +304,11 @@ export default function AdminDashboard() {
       alert('فشل حذف القاعدة')
     }
   }
-
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setRejectionReason('')
     router.push('/login')
   }
-
   const filteredProfiles = profilesList.filter(p => {
     const matchesSearch = (p.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
                           (p.phone || '').includes(searchQuery) ||
@@ -346,7 +316,6 @@ export default function AdminDashboard() {
     const matchesRole = roleFilter === 'all' || p.role === roleFilter
     return matchesSearch && matchesRole
   })
-
   const tabs = [
     { id: 'overview' as TabType, label: 'الإحصائيات العامة', icon: ClipboardList },
     { id: 'activations' as TabType, label: 'تفعيل الحسابات', icon: UserCheck },
@@ -362,11 +331,8 @@ export default function AdminDashboard() {
     { id: 'rules' as TabType, label: 'صلاحيات الأدمن', icon: ShieldCheck },
     { id: 'messages' as TabType, label: 'إرسال رسائل', icon: MessageSquare }
   ]
-
   return (
     <div style={{ minHeight: '100vh', background: '#050814', color: '#fff', fontFamily: 'var(--font-cairo, Cairo, sans-serif)', paddingBottom: 48 }}>
-      
-      {/* Header */}
       <header style={{ 
         borderBottom: '1px solid rgba(255,255,255,0.05)', 
         background: 'rgba(10,13,26,0.8)', 
@@ -392,11 +358,7 @@ export default function AdminDashboard() {
           <span>خروج</span>
         </button>
       </header>
-
-      {/* Main Layout */}
       <div className="flex flex-col md:flex-row w-full max-w-[1280px] mx-auto p-4 md:p-8 gap-4 md:gap-8 overflow-hidden">
-        
-        {/* Sidebar */}
         <aside className="w-full md:w-[240px] flex-shrink-0 flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           {tabs.map((item) => {
             const Icon = item.icon
@@ -426,8 +388,6 @@ export default function AdminDashboard() {
             )
           })}
         </aside>
-
-        {/* Content */}
         <main style={{ flex: 1, minWidth: 0, overflowX: 'auto' }}>
           {loading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
@@ -435,10 +395,8 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <>
-              {/* ===== OVERVIEW TAB ===== */}
               {activeTab === 'overview' && (
                 <div className="flex flex-col gap-6">
-                  {/* 3 Stat Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                     {[
                       { label: 'إجمالي العملاء', value: stats.totalClients, gradient: 'linear-gradient(135deg, rgba(37,99,235,0.2), rgba(6,182,212,0.05))', borderColor: 'rgba(59,130,246,0.2)', valueColor: '#fff' },
@@ -458,8 +416,6 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
-
-                  {/* 2 Bottom Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                     <div style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 700 }}>إجمالي المعاملات وحجم الدفع</span>
@@ -476,8 +432,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== ACTIVATIONS TAB ===== */}
               {activeTab === 'activations' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', padding: 24, borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -551,7 +505,7 @@ export default function AdminDashboard() {
                                       <CheckCircle size={14} /> تفعيل
                                     </button>
                                     <button 
-                                      onClick={() => deleteProfile(p.id)}
+                                      onClick={() => setRejectUser(p)}
                                       style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.1)', background: 'rgba(127,29,29,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', gap: 4, alignItems: 'center' }}
                                     >
                                       <XCircle size={14} /> رفض
@@ -567,11 +521,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== USERS TAB ===== */}
               {activeTab === 'users' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                  {/* Search + Filter Bar */}
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: '#0A0D1A', padding: 16, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ position: 'relative', flex: 1, maxWidth: 300 }}>
                       <Search style={{ position: 'absolute', right: 12, top: 10, color: '#6b7280' }} size={16} />
@@ -602,8 +553,6 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Users Table */}
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
                     <div style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -714,8 +663,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== BOOKINGS TAB ===== */}
               {activeTab === 'bookings' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -781,8 +728,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== EMERGENCIES TAB ===== */}
               {activeTab === 'emergencies' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -839,8 +784,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== SERVICES TAB ===== */}
               {activeTab === 'services' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -886,11 +829,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== CATEGORIES TAB ===== */}
               {activeTab === 'categories' && (
                 <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-                  {/* Add Form */}
                   <div className="w-full md:w-[280px] flex-shrink-0" style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start' }}>
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Plus size={16} style={{ color: '#FF8A00' }} />
@@ -920,8 +860,6 @@ export default function AdminDashboard() {
                       </button>
                     </form>
                   </div>
-
-                  {/* Categories Table */}
                   <div style={{ flex: 1, minWidth: 0, background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', alignSelf: 'flex-start' }}>
                     <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
@@ -954,8 +892,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== REVIEWS TAB ===== */}
               {activeTab === 'reviews' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -1004,8 +940,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== TRANSACTIONS TAB ===== */}
               {activeTab === 'transactions' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', padding: 24 }}>
@@ -1069,8 +1003,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== GALLERY TAB ===== */}
               {activeTab === 'gallery' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   <div style={{ background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -1115,8 +1047,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== NOTIFICATIONS TAB ===== */}
               {activeTab === 'notifications' && (
                 <div className="flex flex-col md:flex-row gap-4 md:gap-8">
                   <div className="w-full md:w-[320px] flex-shrink-0" style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start' }}>
@@ -1129,20 +1059,26 @@ export default function AdminDashboard() {
                       if (!notifTitle.trim() || !notifBody.trim()) return
                       setSendingNotif(true)
                       try {
-                        const { data: allUsers } = await supabase.from('profiles').select('id')
-                        if (allUsers) {
-                          const inserts = allUsers.map(u => ({
+                        let query = supabase.from('profiles').select('id')
+                        if (notifTarget !== 'all') {
+                          query = query.eq('role', notifTarget)
+                        }
+                        const { data: targetUsers } = await query
+                        if (targetUsers && targetUsers.length > 0) {
+                          const inserts = targetUsers.map(u => ({
                             user_id: u.id,
                             title: notifTitle.trim(),
                             body: notifBody.trim()
                           }))
                           const { error } = await supabase.from('notifications').insert(inserts)
                           if (error) throw error
+                          setNotifTitle('')
+                          setNotifBody('')
+                          fetchData()
+                          alert(`تم إرسال الإشعار لعدد ${targetUsers.length} مستخدم`)
+                        } else {
+                          alert('لا يوجد مستخدمين في هذه الفئة')
                         }
-                        setNotifTitle('')
-                        setNotifBody('')
-                        fetchData()
-                        alert('تم إرسال الإشعار لجميع المستخدمين')
                       } catch (err) {
                         alert('فشل إرسال الإشعار')
                       } finally {
@@ -1161,9 +1097,18 @@ export default function AdminDashboard() {
                           style={{ background: '#050814', fontSize: 12, borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(255,255,255,0.05)', outline: 'none', color: '#fff', fontFamily: 'inherit', resize: 'vertical' }}
                           placeholder="اكتب محتوى الإشعار..." />
                       </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 10, color: '#9ca3af', fontWeight: 700 }}>الجمهور المستهدف</label>
+                        <select value={notifTarget} onChange={e => setNotifTarget(e.target.value as 'all' | 'client' | 'worker')}
+                          style={{ background: '#050814', fontSize: 12, borderRadius: 12, padding: '12px 16px', border: '1px solid rgba(255,255,255,0.05)', outline: 'none', color: '#fff', fontFamily: 'inherit' }}>
+                          <option value="all">جميع المستخدمين</option>
+                          <option value="client">العملاء فقط</option>
+                          <option value="worker">الحرفيين فقط</option>
+                        </select>
+                      </div>
                       <button type="submit" disabled={sendingNotif}
                         style={{ width: '100%', background: sendingNotif ? 'rgba(255,138,0,0.3)' : 'linear-gradient(90deg, #FF8A00, #FFB800)', color: '#000', fontWeight: 900, fontSize: 12, padding: '12px 0', borderRadius: 12, border: 'none', cursor: sendingNotif ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                        {sendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار للجميع'}
+                        {sendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار'}
                       </button>
                     </form>
                   </div>
@@ -1178,14 +1123,15 @@ export default function AdminDashboard() {
                             <th style={{ padding: 16 }}>العنوان</th>
                             <th style={{ padding: 16 }}>المحتوى</th>
                             <th style={{ padding: 16 }}>المستخدم</th>
-                            <th style={{ padding: 16 }}>مقروء</th>
+                            <th style={{ padding: 16 }}>حالة القراءة</th>
                             <th style={{ padding: 16 }}>التاريخ</th>
+                            <th style={{ padding: 16 }}>إجراء</th>
                           </tr>
                         </thead>
                         <tbody>
                           {notificationsList.length === 0 ? (
                             <tr>
-                              <td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد إشعارات</td>
+                              <td colSpan={6} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>لا توجد إشعارات</td>
                             </tr>
                           ) : notificationsList.map((n) => (
                             <tr key={n.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1202,6 +1148,19 @@ export default function AdminDashboard() {
                                 </span>
                               </td>
                               <td style={{ padding: 16, color: '#6b7280' }}>{n.created_at ? new Date(n.created_at).toLocaleDateString('ar-EG') : '-'}</td>
+                              <td style={{ padding: 16 }}>
+                                <button
+                                  onClick={async () => {
+                                    if(confirm('هل أنت متأكد من حذف هذا الإشعار؟')) {
+                                      await supabase.from('notifications').delete().eq('id', n.id)
+                                      fetchData()
+                                    }
+                                  }}
+                                  style={{ color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
+                                >
+                                  حذف
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -1210,11 +1169,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== RULES TAB ===== */}
               {activeTab === 'rules' && (
                 <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-                  {/* Add Rule Form */}
                   <div className="w-full md:w-[280px] flex-shrink-0" style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start' }}>
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Plus size={16} style={{ color: '#FF8A00' }} />
@@ -1233,8 +1189,6 @@ export default function AdminDashboard() {
                       </button>
                     </form>
                   </div>
-
-                  {/* Rules Table */}
                   <div style={{ flex: 1, minWidth: 0, background: '#0A0D1A', borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', alignSelf: 'flex-start' }}>
                     <table style={{ width: '100%', minWidth: 400, textAlign: 'right', borderCollapse: 'collapse', fontSize: 12 }}>
                       <thead>
@@ -1269,11 +1223,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* ===== MESSAGES TAB ===== */}
               {activeTab === 'messages' && (
                 <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-                  {/* User Selection */}
                   <div className="w-full md:w-[320px] flex-shrink-0" style={{ background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start', maxHeight: '70vh', overflowY: 'auto' }}>
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <MessageSquare size={16} style={{ color: '#FF8A00' }} />
@@ -1304,8 +1255,6 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Message Form */}
                   <div style={{ flex: 1, minWidth: 0, background: '#0A0D1A', borderRadius: 24, padding: 24, border: '1px solid rgba(255,255,255,0.05)', alignSelf: 'flex-start' }}>
                     {selectedUser ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1321,7 +1270,6 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </div>
-
                         <form onSubmit={sendMessage} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             <label style={{ fontSize: 10, color: '#9ca3af', fontWeight: 700 }}>نص الرسالة</label>
@@ -1387,8 +1335,6 @@ export default function AdminDashboard() {
           )}
         </main>
       </div>
-
-      {/* User Details Modal */}
       {viewUserDetails && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setViewUserDetails(null)}>
           <div style={{ background: '#0A0D1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
@@ -1405,7 +1351,6 @@ export default function AdminDashboard() {
                   <span style={{ display: 'inline-block', marginTop: 8, padding: '4px 12px', borderRadius: 9999, fontSize: 11, fontWeight: 700, background: viewUserDetails.role === 'worker' ? 'rgba(255,138,0,0.1)' : viewUserDetails.role === 'admin' ? 'rgba(168,85,247,0.1)' : 'rgba(59,130,246,0.1)', color: viewUserDetails.role === 'worker' ? '#FF8A00' : viewUserDetails.role === 'admin' ? '#a855f7' : '#60a5fa' }}>{viewUserDetails.role === 'worker' ? 'حرفي' : viewUserDetails.role === 'admin' ? 'أدمن' : 'عميل'}</span>
                 </div>
               </div>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div style={{ background: '#050814', padding: 16, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>رقم الهاتف</div>
@@ -1424,7 +1369,6 @@ export default function AdminDashboard() {
                   <div style={{ fontWeight: 700, color: viewUserDetails.verified || viewUserDetails.role === 'admin' ? '#22c55e' : '#eab308' }}>{viewUserDetails.verified || viewUserDetails.role === 'admin' ? 'موثق' : 'غير موثق'}</div>
                 </div>
               </div>
-
               {viewUserDetails.role === 'worker' && (
                 <>
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginTop: 8, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8 }}>بيانات الحرفي</h3>
@@ -1454,7 +1398,6 @@ export default function AdminDashboard() {
                       <div style={{ color: '#fff', fontWeight: 700 }}>{viewUserDetails.response_rate || 100}%</div>
                     </div>
                   </div>
-                  
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginTop: 8, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8 }}>المرفقات والصور</h3>
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                     {viewUserDetails.id_front_url && (
@@ -1491,7 +1434,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      {/* Reject User Modal */}
       {rejectUser && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setRejectUser(null)}>
           <div style={{ background: '#0A0D1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, width: '100%', maxWidth: 400, padding: 24 }} onClick={(e) => e.stopPropagation()}>
@@ -1515,8 +1457,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-
-      {/* Edit Service Modal */}
       {editingService && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setEditingService(null)}>
           <div style={{ background: '#0A0D1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, width: '100%', maxWidth: 400, padding: 24 }} onClick={(e) => e.stopPropagation()}>
@@ -1560,8 +1500,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-
-      {/* Edit User Modal */}
       {editUserData && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setEditUserData(null)}>
           <div style={{ background: '#0A0D1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
@@ -1619,7 +1557,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      {/* Spin animation */}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>

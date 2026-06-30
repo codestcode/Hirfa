@@ -11,7 +11,7 @@ import { InfoBanner } from '@/components/ui/InfoBanner'
 import { usePaymentMethods } from '@/hooks/usePaymentMethods'
 
 export default function PaymentMethodsPage() {
-  const { methods, loading, showAddModal, setShowAddModal, setAsDefault, removeMethod } = usePaymentMethods()
+  const { methods, loading, showAddModal, setShowAddModal, setAsDefault, removeMethod, refresh } = usePaymentMethods()
 
   return (
     <SubPageLayout>
@@ -44,7 +44,14 @@ export default function PaymentMethodsPage() {
           <Plus size={20} className="text-[#FF8A00]" /> إضافة طريقة دفع جديدة
         </button>
       </div>
-      <AddPaymentModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+      <AddPaymentModal 
+        isOpen={showAddModal} 
+        onClose={() => setShowAddModal(false)} 
+        onSuccess={() => {
+          setShowAddModal(false)
+          refresh()
+        }}
+      />
     </SubPageLayout>
   )
 }

@@ -13,7 +13,6 @@ interface SearchResult {
   full_name: string | null
   avatar_url: string | null
   profession: string | null
-  category: string | null
   rating: number | null
   completed_orders: number | null
   governorate: string | null
@@ -71,10 +70,11 @@ export default function SearchPage() {
       const q = query.trim()
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, profession, category, rating, completed_orders, governorate, area')
+        .select('id, full_name, avatar_url, profession, rating, completed_orders, governorate, area')
         .eq('role', 'worker')
         .eq('verified', true)
-        .or(`full_name.ilike.%${q}%,profession.ilike.%${q}%,category.ilike.%${q}%`)
+        .eq('verification_status', 'verified')
+        .or(`full_name.ilike.%${q}%,profession.ilike.%${q}%`)
         .order('rating', { ascending: false })
         .limit(20)
       
@@ -124,13 +124,15 @@ export default function SearchPage() {
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
               <Search size={16} className="text-[#4B5A7A]" />
             </div>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="ابحث عن خدمة أو حرفي..."
-              className="w-full h-11 pr-10 pl-4 rounded-2xl bg-[#0A0D1A] border border-white/10 text-white text-sm text-right outline-none placeholder-[#4B5A7A] focus:border-[#FF8A00]/50 transition-colors"
-            />
+            <form onSubmit={(e) => { e.preventDefault(); handleSearch(query); }}>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="ابحث عن خدمة أو حرفي..."
+                className="w-full h-11 pr-10 pl-4 rounded-2xl bg-[#0A0D1A] border border-white/10 text-white text-sm text-right outline-none placeholder-[#4B5A7A] focus:border-[#FF8A00]/50 transition-colors"
+              />
+            </form>
             {query && (
               <button onClick={() => { setQuery(''); setSearched(false) }} className="absolute left-3 top-1/2 -translate-y-1/2">
                 <X size={14} className="text-[#4B5A7A]" />
@@ -263,7 +265,7 @@ export default function SearchPage() {
                             </div>
                             <p className="text-xs text-[#6B7A99] mt-0.5">{worker.profession || 'حرفي'}</p>
                             <div className="flex items-center gap-3 mt-2 text-[10px] text-[#4B5A7A]">
-                              {worker.governorate && <span>{worker.governorate}</span>}
+                              {worker.governorate && <span>{worker.governorate}{worker.area ? ` - ${worker.area}` : ''}</span>}
                               {worker.completed_orders != null && (
                                 <span>{worker.completed_orders} مهمة</span>
                               )}

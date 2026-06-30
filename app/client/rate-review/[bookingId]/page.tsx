@@ -67,6 +67,20 @@ export default function RateReviewPage() {
       return
     }
 
+    // Update worker average rating
+    const { data: allReviews } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('craftsman_id', workerId)
+
+    if (allReviews && allReviews.length > 0) {
+      const avg = allReviews.reduce((sum, rev) => sum + rev.rating, 0) / allReviews.length
+      await supabase.from('profiles').update({ rating: parseFloat(avg.toFixed(1)) }).eq('id', workerId)
+    }
+
+    // Mark booking as closed
+    await supabase.from('bookings').update({ status: 'closed' }).eq('id', bookingId)
+
     createNotification(user.id, 'تم إضافة تقييم', `قيمت ${workerName} بتقييم ${rating} نجوم`)
     setSubmitted(true)
     setSubmitting(false)
