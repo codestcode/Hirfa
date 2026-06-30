@@ -1,0 +1,78 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Next.js app
+        run: |
+          # Ensure Next.js builds as a static export
+          if ! grep -q "output: 'export'" next.config.mjs; then
+            sed -i "s/const nextConfig = {/const nextConfig = {\n  output: 'export',/" next.config.mjs
+          fi
+          pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Prepare Capacitor files
+        run: |
+          # Install capacitor CLI and core
+          pnpm add -D @capacitor/cli @capacitor/core @capacitor/android
+          
+          # Create a root capacitor config to bundle the static files
+          cat <<EOF > capacitor.config.json
+          {
+            "appId": "com.hirfa.app",
+            "appName": "Hirfa",
+            "webDir": "out",
+            "bundledWebRuntime": false
+          }
+          EOF
+          
+          # Add and sync the android platform
+          rm -rf android # Remove the broken or incomplete android folder
+          npx cap add android
+
+      - name: Build APK
+        working-directory: ./android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
