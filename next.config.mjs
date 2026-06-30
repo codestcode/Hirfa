@@ -10,7 +10,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   turbopack: { root: '.' },
-  output: 'export',
 };
 
 export default nextConfig;

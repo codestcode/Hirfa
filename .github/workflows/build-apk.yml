@@ -37,16 +37,19 @@ jobs:
         run: pnpm install
 
       - name: Build Next.js app
-<<<<<<< HEAD
         run: |
           # Ensure Next.js builds as a static export
           if ! grep -q "output: 'export'" next.config.mjs; then
             sed -i "s/const nextConfig = {/const nextConfig = {\n  output: 'export',/" next.config.mjs
           fi
+          # Move API routes out of the way because they cannot be statically exported
+          if [ -d "app/api" ]; then
+            mv app/api .temp-api-backup
+          fi
           pnpm run build
         env:
           NODE_ENV: production
-
+          
       - name: Prepare Capacitor files
         run: |
           # Install capacitor CLI and core
@@ -65,17 +68,6 @@ jobs:
           # Add and sync the android platform
           rm -rf android # Remove the broken or incomplete android folder
           npx cap add android
-=======
-        run: pnpm run build
-        env:
-          # Add any environment variables needed for the build here
-          NODE_ENV: production
-
-      - name: Sync Capacitor Android
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          npx cap sync android
->>>>>>> 12b26fde93279a95bad56583bdd00a1a39766d7d
 
       - name: Build APK
         working-directory: ./android
