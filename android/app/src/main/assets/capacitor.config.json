@@ -1,0 +1,9 @@
+{
+	"appId": "com.hirfa.app",
+	"appName": "Hirfa",
+	"webDir": "out",
+	"server": {
+		"url": "https://hirfa-amber.vercel.app",
+		"cleartext": true
+	}
+}

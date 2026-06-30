@@ -37,15 +37,33 @@ jobs:
         run: pnpm install
 
       - name: Build Next.js app
-        run: pnpm run build
-        env:
-          # Add any environment variables needed for the build here
-          NODE_ENV: production
-
-      - name: Sync Capacitor Android
         run: |
-          mkdir -p android/app/src/main/assets/public
-          npx cap sync android
+          # Move API routes out of the way because they cannot be statically exported
+          if [ -d "app/api" ]; then
+            mv app/api .temp-api-backup
+          fi
+          pnpm run build:capacitor
+        env:
+          NODE_ENV: production
+          
+      - name: Prepare Capacitor files
+        run: |
+          # Install capacitor CLI and core
+          pnpm add -D @capacitor/cli @capacitor/core @capacitor/android
+          
+          # Create a root capacitor config to bundle the static files
+          cat <<EOF > capacitor.config.json
+          {
+            "appId": "com.hirfa.app",
+            "appName": "Hirfa",
+            "webDir": "out",
+            "bundledWebRuntime": false
+          }
+          EOF
+          
+          # Add and sync the android platform
+          rm -rf android # Remove the broken or incomplete android folder
+          npx cap add android
 
       - name: Build APK
         working-directory: ./android

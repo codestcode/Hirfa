@@ -10,7 +10,10 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   turbopack: { root: '.' },
-  output: 'export',
 };
+
+if (process.env.CAPACITOR_BUILD === 'true') {
+  nextConfig.output = 'export';
+}
 
 export default nextConfig;

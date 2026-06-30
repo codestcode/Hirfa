@@ -17,3 +17,17 @@ node_modules/
 .DS_Store
 *.swp
 *.swo
+
+# Next.js
+out/
+build/
+.turbo/
+
+# Capacitor / Android
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+android/.idea
+android/**/*.iml
+app-debug.apk
