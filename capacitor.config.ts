@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Hirfa',
   webDir: 'out',
   server: {
-    url: 'https://hirfa-amber.vercel.app',
+    url: 'https://hirfa-five.vercel.app/',
     cleartext: true
   }
 };
