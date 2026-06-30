@@ -156,20 +156,37 @@ pnpm run dev
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### 🏗️ Build Commands
+
+The project uses Next.js with specialized build commands for different targets:
+
+- `pnpm run build:web` — Standard Next.js production build for web hosting (Vercel, etc.).
+- `pnpm run build:capacitor` — Specialized static export build (`output: 'export'`) that compiles the app for Capacitor, generating static HTML/JS files in the `out` directory.
+
 ---
 
-## 📱 Mobile App (Capacitor)
+## 📱 Mobile App (Capacitor) & CI/CD
 
-Hirfa is built as a mobile-first application and can be compiled into a native Android app using Capacitor.
+Hirfa is built as a mobile-first application and is compiled into a native Android APK using Capacitor.
 
-### Build the Android App
+### GitHub Actions (Automated CI/CD)
 
-1. Build the Next.js web application:
+The project is equipped with a robust GitHub Actions workflow (`.github/workflows/build-apk.yml`) that automatically builds the Android APK upon pushing to any branch. 
+1. It builds the Next.js app using `pnpm run build:capacitor`.
+2. It safely configures Capacitor and runs `npx cap sync android`.
+3. It compiles the APK using Gradle (`assembleDebug`).
+4. The resulting `app-debug.apk` is available as a downloadable artifact directly from the Actions tab on GitHub.
+
+### Manual Local Build
+
+If you want to build the APK locally on your machine:
+
+1. Build the web assets specifically for Capacitor:
 ```bash
-pnpm run build
+pnpm run build:capacitor
 ```
 
-2. Sync the web assets with the Capacitor Android project:
+2. Sync the web assets with the Android project:
 ```bash
 npx cap sync android
 ```
@@ -178,7 +195,12 @@ npx cap sync android
 ```bash
 npx cap open android
 ```
-Alternatively, you can use the provided `./build_apk.sh` script to automate the APK generation process on Linux environments.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed instructions on how to set up your environment, follow our coding standards, and submit pull requests.
 
 ---
 
