@@ -1,9 +1,9 @@
 import ClientPage from './ClientPage';
 
 export function generateStaticParams() {
-  return [];
+  return [{ bookingId: 'dummy' }];
 }
 
-export default function Page() {
-  return <ClientPage />;
+export default function Page({ params }: { params: any }) {
+  return <ClientPage params={params} />;
 }

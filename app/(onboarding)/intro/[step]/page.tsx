@@ -9,6 +9,6 @@ export function generateStaticParams() {
   ];
 }
 
-export default function Page() {
-  return <ClientPage />;
+export default function Page({ params }: { params: any }) {
+  return <ClientPage params={params} />;
 }

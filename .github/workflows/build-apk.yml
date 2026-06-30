@@ -2,11 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
   workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
@@ -21,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,24 +42,14 @@ jobs:
         env:
           NODE_ENV: production
           
-      - name: Prepare Capacitor files
+      - name: Configure Capacitor for Production
         run: |
-          # Install capacitor CLI and core
-          pnpm add -D @capacitor/cli @capacitor/core @capacitor/android
+          # Remove the server block from capacitor.config.ts to bundle the web assets locally
+          sed -i '/server:/,/}/d' capacitor.config.ts
           
-          # Create a root capacitor config to bundle the static files
-          cat <<EOF > capacitor.config.json
-          {
-            "appId": "com.hirfa.app",
-            "appName": "Hirfa",
-            "webDir": "out",
-            "bundledWebRuntime": false
-          }
-          EOF
-          
-          # Add and sync the android platform
-          rm -rf android # Remove the broken or incomplete android folder
-          npx cap add android
+      - name: Sync Capacitor Android
+        run: |
+          npx cap sync android
 
       - name: Build APK
         working-directory: ./android
