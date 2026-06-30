@@ -99,3 +99,8 @@ export default function ServicesPage() {
     </div>
   )
 }
+
+
+export function generateStaticParams() {
+  return [];
+}

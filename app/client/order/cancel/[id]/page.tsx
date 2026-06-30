@@ -75,3 +75,8 @@ export default function CancelPage() {
     </Suspense>
   )
 }
+
+
+export function generateStaticParams() {
+  return [];
+}

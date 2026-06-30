@@ -153,3 +153,8 @@ export default function EditAddressPage({ params }: { params: Promise<{ id: stri
     </SubPageLayout>
   )
 }
+
+
+export function generateStaticParams() {
+  return [];
+}
